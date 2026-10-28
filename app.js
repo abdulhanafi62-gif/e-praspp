@@ -20,7 +20,7 @@ let activeSettings = {
   pkaPelayanan: 'Kasi Pelayanan',
   pkaUmum: 'Kaur Umum & Perencanaan',
   disclaimerOption: 'PROTECT_PKA',
-  firebaseUrl: ''
+  firebaseUrl: 'https://epraspp-tanjungmanis-default-rtdb.asia-southeast1.firebasedatabase.app'
 };
 
 // Initial Samples
@@ -140,15 +140,31 @@ function initCloudSync() {
         saveSubmissionsToLocalOnly();
         renderAllViews();
         updateCloudStatus(true, 'Cloud Terhubung');
+      } else if (submissions && submissions.length > 0) {
+        // Jika di cloud masih kosong tapi di lokal sudah ada data, unggah data awal ke cloud
+        syncToCloud(submissions);
+        updateCloudStatus(true, 'Cloud Terhubung');
       }
     }, (error) => {
-      console.warn('Firebase notice (using local/cloud cache):', error.message);
-      updateCloudStatus(true, 'Online Mode');
+      console.warn('Firebase notice:', error.message);
+      updateCloudStatus(false, 'Periksa Rules Database');
+    });
+
+    // Sinkronisasi Pengaturan Profil & Pejabat Desa
+    const settingsRef = firebaseDb.ref('tanjung_manis/settings_v5');
+    settingsRef.on('value', (snapshot) => {
+      const cloudSettings = snapshot.val();
+      if (cloudSettings) {
+        activeSettings = Object.assign({}, defaultVillageSettings, cloudSettings);
+        localStorage.setItem('epraspp_settings_v3_tm', JSON.stringify(activeSettings));
+        loadSettings();
+        applyVillageBrandToUI();
+      }
     });
 
   } catch (err) {
     console.warn('Cloud sync init error:', err);
-    updateCloudStatus(true, 'Online Cache Aktif');
+    updateCloudStatus(false, 'Offline Lokal');
   }
 
   // Network state
@@ -235,11 +251,13 @@ function loadSettings() {
 }
 
 function applyVillageBrandToUI() {
-  // App Bar
+  // App Bar & Sidebar
   const titleEl = document.getElementById('headerVillageTitle');
   const subEl = document.getElementById('headerVillageSubtitle');
   if (titleEl) titleEl.textContent = `E-PraSPP`;
   if (subEl) subEl.textContent = `Desa ${activeSettings.village} • ${activeSettings.district}`;
+  const sidebarVillage = document.getElementById('sidebarVillageText');
+  if (sidebarVillage) sidebarVillage.textContent = `Desa ${activeSettings.village}`;
 
   // Kop Surat Pra-SPP
   if (document.getElementById('kopRegency')) document.getElementById('kopRegency').textContent = `PEMERINTAH KABUPATEN ${activeSettings.regency.toUpperCase()}`;
@@ -272,6 +290,13 @@ function saveVillageSettings() {
 
   localStorage.setItem('epraspp_settings_v3_tm', JSON.stringify(activeSettings));
   applyVillageBrandToUI();
+
+  if (firebaseDb) {
+    try {
+      firebaseDb.ref('tanjung_manis/settings_v5').set(activeSettings).catch(e => console.warn('Cloud settings deferred:', e));
+    } catch (e) {}
+  }
+
   showToast('Profil Desa & Daftar Pejabat berhasil disimpan!');
 }
 
@@ -1131,17 +1156,54 @@ function backupAndExportData() {
 }
 
 // ============================================================================
-// HELPER FUNCTIONS (TERBILANG, RUPIAH, DATES)
+// SIDEBAR MENU DRAWER HANDLERS (MENU SAMPING KIRI)
+// ============================================================================
+function toggleSidebarMenu() {
+  const drawer = document.getElementById('sidebarDrawer');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (!drawer) return;
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    closeSidebarMenu();
+  } else {
+    drawer.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeSidebarMenu() {
+  const drawer = document.getElementById('sidebarDrawer');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (drawer) drawer.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function navigateFromSidebar(viewId, clickedBtn) {
+  switchView(viewId);
+  closeSidebarMenu();
+}
+
+// Tutup menu drawer saat tombol ESC ditekan
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeSidebarMenu();
+  }
+});
+
+// ============================================================================
+// NAVIGATION & VIEW SWITCHER
 // ============================================================================
 function switchView(viewId, btnEl) {
   document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-btn, .d-nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn, .d-nav-btn, .sidebar-nav-item').forEach(b => b.classList.remove('active'));
 
   const targetView = document.getElementById(viewId);
   if (targetView) targetView.classList.add('active');
 
-  // Highlight all corresponding buttons in desktop header and mobile bottom bar
-  document.querySelectorAll('.nav-btn, .d-nav-btn').forEach(b => {
+  // Highlight all corresponding buttons in desktop header and sidebar drawer
+  document.querySelectorAll('.nav-btn, .d-nav-btn, .sidebar-nav-item').forEach(b => {
     if (b.getAttribute('onclick')?.includes(viewId)) {
       b.classList.add('active');
     }

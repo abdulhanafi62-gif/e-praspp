@@ -39,7 +39,7 @@ body {
   background-color: var(--bg-page);
   color: var(--text-main);
   line-height: 1.5;
-  padding-bottom: 80px; /* Space for bottom nav */
+  padding-bottom: 24px; /* Bersih tanpa bilah bawah */
 }
 
 /* ---------------- HEADER ---------------- */
@@ -614,49 +614,323 @@ textarea:focus {
   padding-bottom: 6px;
 }
 
-/* ---------------- BOTTOM NAV ---------------- */
+/* ---------------- BOTTOM NAV (DINONAKTIFKAN, DIGANTI MENU SAMPING KIRI) ---------------- */
 .bottom-nav {
+  display: none !important;
+}
+
+/* ==========================================================================
+   MENU HAMBURGER & SIDEBAR DRAWER (SAMPING KIRI)
+   ========================================================================== */
+.menu-toggle-btn {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.menu-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.menu-toggle-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Backdrop Gelap saat Menu Terbuka */
+.sidebar-backdrop {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: #ffffff;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.04);
-  z-index: 99;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
-.nav-btn {
-  background: none;
-  border: none;
+.sidebar-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel Menu Samping Kiri */
+.sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 84vw);
+  background: #ffffff;
+  z-index: 1200;
   display: flex;
   flex-direction: column;
+  box-shadow: 6px 0 25px rgba(0, 0, 0, 0.28);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+.sidebar-drawer.open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  color: #ffffff;
+  padding: 18px 16px;
+  display: flex;
   align-items: center;
-  gap: 3px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.sidebar-brand h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.sidebar-brand p {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.sidebar-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
   cursor: pointer;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
-.nav-btn i {
-  font-size: 1.2rem;
+.sidebar-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.nav-btn.active {
+.sidebar-body {
+  padding: 16px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin: 4px 0 10px 4px;
+}
+
+.sidebar-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  background: #f9fafb;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-nav-item:hover {
+  background: #f3f4f6;
+  border-color: var(--border);
+}
+
+.sidebar-nav-item:active {
+  transform: scale(0.98);
+}
+
+.sidebar-nav-item.active {
+  background: var(--primary-tint);
+  border-color: var(--primary-light);
+  box-shadow: 0 3px 10px rgba(6, 95, 70, 0.15);
+}
+
+.sidebar-nav-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.bg-emerald-tint { background: #d1fae5; }
+.text-primary { color: var(--primary); }
+
+.bg-blue-tint { background: #dbeafe; }
+.text-blue { color: #2563eb; }
+
+.bg-gold-tint { background: #fef3c7; }
+.text-gold { color: #d97706; }
+
+.bg-purple-tint { background: #f3e8ff; }
+.text-purple { color: #7c3aed; }
+
+.sidebar-nav-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-nav-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.sidebar-nav-item.active .sidebar-nav-title {
+  color: var(--primary-dark);
+}
+
+.sidebar-nav-desc {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.sidebar-nav-arrow {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.sidebar-nav-item:hover .sidebar-nav-arrow {
+  transform: translateX(3px);
   color: var(--primary);
-  transform: translateY(-2px);
 }
 
-.nav-btn.active i {
-  color: var(--primary);
+/* Highlight Khusus Menu Kaur Keuangan di Sidebar */
+.sidebar-highlight-kaur {
+  background: #fffdf5 !important;
+  border: 1.5px solid #fde68a !important;
+}
+
+.sidebar-highlight-kaur:hover {
+  background: #fef3c7 !important;
+}
+
+.sidebar-highlight-kaur.active {
+  background: #fef3c7 !important;
+  border-color: #d97706 !important;
+}
+
+.badge-bendahara {
+  background: #d97706;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+}
+
+/* Status Koneksi di Sidebar */
+.sidebar-status-box {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  flex-shrink: 0;
+}
+
+.sidebar-status-box strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #065f46;
+}
+
+.sidebar-status-box p {
+  font-size: 0.7rem;
+  color: #047857;
+  margin: 0;
+}
+
+.sidebar-footer {
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.sidebar-meta-text {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.sidebar-meta-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
 }
 
 /* ---------------- EMPTY STATE ---------------- */

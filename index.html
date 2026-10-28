@@ -32,6 +32,10 @@
   <header class="app-header no-print">
     <div class="header-container">
       <div class="brand">
+        <!-- TOMBOL MENU HAMBURGER (SAMPING KIRI) -->
+        <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleSidebarMenu()" aria-label="Buka Menu Samping" title="Buka Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
         <img src="logo-kutim.png" alt="Logo Kutai Timur" class="header-logo" onerror="this.style.display='none'">
         <div class="brand-text">
           <h1 id="headerVillageTitle">E-PraSPP</h1>
@@ -62,6 +66,94 @@
       </div>
     </div>
   </header>
+
+  <!-- ============================================================ -->
+  <!-- SIDEBAR DRAWER MENU SAMPING KIRI (RESPONSIF HP & LAPTOP)     -->
+  <!-- ============================================================ -->
+  <div id="sidebarBackdrop" class="sidebar-backdrop no-print" onclick="closeSidebarMenu()"></div>
+
+  <aside id="sidebarDrawer" class="sidebar-drawer no-print">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <img src="logo-kutim.png" alt="Logo Kutai Timur" class="sidebar-logo" onerror="this.style.display='none'">
+        <div>
+          <h3>E-PraSPP</h3>
+          <p id="sidebarVillageText">Desa Tanjung Manis</p>
+        </div>
+      </div>
+      <button class="sidebar-close-btn" onclick="closeSidebarMenu()" aria-label="Tutup Menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-body">
+      <div class="sidebar-section-title">MENU UTAMA</div>
+
+      <nav class="sidebar-menu-list">
+        <!-- Menu 1: Ajukan -->
+        <button class="sidebar-nav-item active" onclick="navigateFromSidebar('view-form', this)">
+          <div class="sidebar-nav-icon bg-emerald-tint">
+            <i class="fa-solid fa-file-pen text-primary"></i>
+          </div>
+          <div class="sidebar-nav-info">
+            <span class="sidebar-nav-title">Ajukan Kegiatan</span>
+            <span class="sidebar-nav-desc">Input pagu anggaran per PKA</span>
+          </div>
+          <i class="fa-solid fa-chevron-right sidebar-nav-arrow"></i>
+        </button>
+
+        <!-- Menu 2: Riwayat -->
+        <button class="sidebar-nav-item" onclick="navigateFromSidebar('view-list', this)">
+          <div class="sidebar-nav-icon bg-blue-tint">
+            <i class="fa-solid fa-folder-open text-blue"></i>
+          </div>
+          <div class="sidebar-nav-info">
+            <span class="sidebar-nav-title">Riwayat Pengajuan</span>
+            <span class="sidebar-nav-desc">Arsip online berkas semua PKA</span>
+          </div>
+          <i class="fa-solid fa-chevron-right sidebar-nav-arrow"></i>
+        </button>
+
+        <!-- Menu 3: Kaur Keuangan (Khusus) -->
+        <button class="sidebar-nav-item sidebar-highlight-kaur" onclick="navigateFromSidebar('view-rekap', this)">
+          <div class="sidebar-nav-icon bg-gold-tint">
+            <i class="fa-solid fa-building-columns text-gold"></i>
+          </div>
+          <div class="sidebar-nav-info">
+            <span class="sidebar-nav-title">Menu Kaur Keuangan</span>
+            <span class="sidebar-nav-desc">Kas bank, kuitansi, & foto bukti</span>
+          </div>
+          <span class="badge-bendahara">Bendahara</span>
+        </button>
+
+        <!-- Menu 4: Profil Desa -->
+        <button class="sidebar-nav-item" onclick="navigateFromSidebar('view-settings', this)">
+          <div class="sidebar-nav-icon bg-purple-tint">
+            <i class="fa-solid fa-id-card text-purple"></i>
+          </div>
+          <div class="sidebar-nav-info">
+            <span class="sidebar-nav-title">Profil Desa & Pejabat</span>
+            <span class="sidebar-nav-desc">Kades, Sekdes, PKA & Database</span>
+          </div>
+          <i class="fa-solid fa-chevron-right sidebar-nav-arrow"></i>
+        </button>
+      </nav>
+
+      <!-- Quick Status Box -->
+      <div class="sidebar-status-box">
+        <div class="status-indicator-dot"></div>
+        <div>
+          <strong>Database Terhubung</strong>
+          <p id="sidebarDbHost">Google Firebase Realtime Sync</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <p class="sidebar-meta-text"><strong>Pemerintah Desa Tanjung Manis</strong></p>
+      <p class="sidebar-meta-sub">Kecamatan Sangkulirang • Kabupaten Kutai Timur</p>
+    </div>
+  </aside>
 
   <!-- Main Container -->
   <main class="main-content no-print">
