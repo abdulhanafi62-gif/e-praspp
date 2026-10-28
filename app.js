@@ -808,6 +808,80 @@ function closeViewPhotoModal() {
 }
 
 // ============================================================================
+// HELPER GENERATE PDF PRESISI 1 HALAMAN A4 (BEBAS SCROLL & ANTI TERPOTONG)
+// ============================================================================
+async function generateCleanPdfBlob(srcElement, filename) {
+  if (!srcElement || typeof html2pdf === 'undefined') return null;
+
+  // 1. Buat kontainer rendering terisolasi berukuran standar A4 (794px pada 96 DPI)
+  // Ini 100% menghilangkan efek pergeseran scroll window/modal dan sempitnya layar HP
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.top = '0px';
+  container.style.left = '0px';
+  container.style.width = '794px';
+  container.style.background = '#ffffff';
+  container.style.zIndex = '999999';
+  container.style.margin = '0';
+  container.style.padding = '0';
+  container.style.boxSizing = 'border-box';
+  container.style.pointerEvents = 'none';
+
+  // 2. Clone elemen surat/kuitansi dengan margin dan styling proporsional A4
+  const clone = srcElement.cloneNode(true);
+  clone.style.width = '100%';
+  clone.style.maxWidth = '794px';
+  clone.style.boxShadow = 'none';
+  clone.style.margin = '0';
+  clone.style.padding = '18px 28px'; // Margin proporsional A4 pas 1 lembar
+  clone.style.borderRadius = '0';
+  clone.style.boxSizing = 'border-box';
+  clone.style.lineHeight = '1.25';
+
+  container.appendChild(clone);
+  document.body.appendChild(container);
+
+  // 3. Konfigurasi html2canvas presisi: scrollY: 0, scrollX: 0
+  const opt = {
+    margin: [4, 6, 4, 6], // [top, right, bottom, left] dalam mm
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      letterRendering: true,
+      scrollY: 0,
+      scrollX: 0,
+      windowWidth: 794
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    const pdfBlob = await html2pdf().from(clone).set(opt).outputPdf('blob');
+    return pdfBlob;
+  } finally {
+    if (container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
+  }
+}
+
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    if (a.parentNode) a.parentNode.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1500);
+}
+
+// ============================================================================
 // BAGIKAN FILE DOKUMEN PDF RESMI LANGSUNG KE WHATSAPP (HP & LAPTOP)
 // ============================================================================
 async function shareToWhatsApp() {
@@ -820,15 +894,7 @@ async function shareToWhatsApp() {
   const cleanRole = (s.pkaRole || 'PKA').replace(/[^a-zA-Z0-9]/g, '_');
   const filename = `Surat_PraSPP_${cleanRegNo}_${cleanRole}.pdf`;
 
-  showToast('Memproses file PDF surat pengajuan...');
-
-  const opt = {
-    margin: [10, 15, 10, 18],
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+  showToast('Memproses file PDF surat pengajuan (1 lembar rapi)...');
 
   const shareText = 
 `*SURAT PENGAJUAN PRA-SPP DESA ${activeSettings.village.toUpperCase()}*
@@ -844,31 +910,32 @@ _Catatan:_ Terlampir dokumen resmi Surat Pengajuan Pra-SPP Desa Tanjung Manis. P
 
   try {
     if (typeof html2pdf !== 'undefined') {
-      // 1. Render element menjadi file blob PDF
-      const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+      const pdfBlob = await generateCleanPdfBlob(element, filename);
+      if (pdfBlob) {
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
 
-      // 2. Jika di HP Android / browser yang mendukung fitur Web Share File (Direct Attach to WA)
-      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        await navigator.share({
-          files: [pdfFile],
-          title: `Surat Pra-SPP ${s.regNo}`,
-          text: shareText
-        });
-        showToast('Berhasil membagikan file PDF ke WhatsApp!');
+        // 1. Jika di HP Android / browser yang mendukung fitur Web Share File (Direct Attach to WA)
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          await navigator.share({
+            files: [pdfFile],
+            title: `Surat Pra-SPP ${s.regNo}`,
+            text: shareText
+          });
+          showToast('Berhasil membagikan file PDF ke WhatsApp!');
+          return;
+        }
+
+        // 2. Jika di browser laptop yang belum mendukung Web Share File:
+        // Otomatis download file PDF 1 lembar ke folder Downloads laptop
+        triggerBlobDownload(pdfBlob, filename);
+        showToast('File PDF 1 lembar berhasil diunduh ke laptop!');
+
+        setTimeout(() => {
+          const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n*File PDF resmi telah diunduh di laptop Anda dengan nama:* ' + filename)}`;
+          window.open(waUrl, '_blank');
+        }, 700);
         return;
       }
-
-      // 3. Jika di browser laptop yang belum mendukung Web Share File:
-      // Otomatis download file PDF ke laptop agar bisa langsung dilampirkan
-      await html2pdf().from(element).set(opt).save();
-      showToast('File PDF berhasil diunduh ke laptop!');
-
-      setTimeout(() => {
-        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n*File PDF resmi telah diunduh di laptop Anda dengan nama:* ' + filename)}`;
-        window.open(waUrl, '_blank');
-      }, 700);
-      return;
     }
   } catch (err) {
     console.warn('Share file PDF exception:', err);
@@ -887,15 +954,7 @@ async function shareReceiptToWhatsApp() {
   const rcpNo = (s.receiptNo || 'KW-001').replace(/[^a-zA-Z0-9]/g, '_');
   const filename = `Kuitansi_Kas_${rcpNo}.pdf`;
 
-  showToast('Memproses file PDF kuitansi kas...');
-
-  const opt = {
-    margin: [10, 15, 10, 18],
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+  showToast('Memproses file PDF kuitansi kas (1 lembar rapi)...');
 
   const shareText = 
 `*KUITANSI SERAH TERIMA UANG KAS DESA ${activeSettings.village.toUpperCase()}*
@@ -911,27 +970,29 @@ _Catatan:_ Fisik uang kas desa telah diserahterimakan secara riil dan penuh. Ter
 
   try {
     if (typeof html2pdf !== 'undefined') {
-      const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+      const pdfBlob = await generateCleanPdfBlob(element, filename);
+      if (pdfBlob) {
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
 
-      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        await navigator.share({
-          files: [pdfFile],
-          title: `Kuitansi Kas ${s.receiptNo}`,
-          text: shareText
-        });
-        showToast('Berhasil membagikan kuitansi PDF ke WhatsApp!');
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          await navigator.share({
+            files: [pdfFile],
+            title: `Kuitansi Kas ${s.receiptNo}`,
+            text: shareText
+          });
+          showToast('Berhasil membagikan kuitansi PDF ke WhatsApp!');
+          return;
+        }
+
+        triggerBlobDownload(pdfBlob, filename);
+        showToast('Kuitansi PDF 1 lembar berhasil diunduh ke laptop!');
+
+        setTimeout(() => {
+          const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n*File Kuitansi PDF telah diunduh di laptop Anda dengan nama:* ' + filename)}`;
+          window.open(waUrl, '_blank');
+        }, 700);
         return;
       }
-
-      await html2pdf().from(element).set(opt).save();
-      showToast('Kuitansi PDF berhasil diunduh ke laptop!');
-
-      setTimeout(() => {
-        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n*File Kuitansi PDF telah diunduh di laptop Anda dengan nama:* ' + filename)}`;
-        window.open(waUrl, '_blank');
-      }, 700);
-      return;
     }
   } catch (err) {
     console.warn('Share receipt PDF exception:', err);
