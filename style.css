@@ -1,0 +1,1458 @@
+/* ==========================================================================
+   E-PraSPP Desa Tanjung Manis - Style Sheet
+   Designed for Mobile Android (APK) & Desktop Browser
+   ========================================================================== */
+
+:root {
+  --primary: #065f46;         /* Emerald 800 */
+  --primary-dark: #064e3b;    /* Emerald 900 */
+  --primary-light: #10b981;   /* Emerald 500 */
+  --primary-tint: #ecfdf5;    /* Emerald 50 */
+  --accent: #d97706;         /* Amber 600 */
+  --accent-light: #fef3c7;    /* Amber 100 */
+  --success: #15803d;
+  --danger: #b91c1c;
+  --text-main: #1f2937;
+  --text-sub: #4b5563;
+  --text-muted: #9ca3af;
+  --border: #e5e7eb;
+  --bg-page: #f3f4f6;
+  --bg-card: #ffffff;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+  padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* ---------------- HEADER ---------------- */
+.app-header {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  color: #ffffff;
+  padding: 14px 18px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+.header-container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.brand-text h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.brand-text p {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.cloud-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.cloud-status-badge.online {
+  color: #a7f3d0;
+}
+
+.cloud-status-badge.offline {
+  color: #fecaca;
+}
+
+/* ---------------- MAIN CONTENT & CARDS ---------------- */
+.main-content {
+  max-width: 900px;
+  margin: 16px auto;
+  padding: 0 14px;
+}
+
+.app-view {
+  display: none;
+}
+
+.app-view.active {
+  display: block;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card-header.space-between {
+  justify-content: space-between;
+}
+
+.card-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.bg-emerald { background: linear-gradient(135deg, #059669, #10b981); }
+.bg-gold { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.bg-blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+
+/* ---------------- FORM CONTROLS ---------------- */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 14px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+label i {
+  color: var(--primary);
+  margin-right: 4px;
+}
+
+.req {
+  color: var(--danger);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  background-color: #f9fafb;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* ---------------- ITEMS TABLE ---------------- */
+.items-section {
+  margin-top: 24px;
+  background: #fbfcfd;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.items-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.section-help {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  margin-bottom: 14px;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.items-table th {
+  background: #f1f5f9;
+  color: var(--text-sub);
+  font-weight: 700;
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+
+.items-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.items-table input {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+}
+
+.btn-remove-row {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 auto;
+}
+
+.btn-remove-row:hover {
+  background: #fca5a5;
+}
+
+.total-summary-card {
+  margin-top: 14px;
+  background: #ffffff;
+  border: 1.5px solid #a7f3d0;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.total-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.total-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.terbilang-box {
+  font-size: 0.82rem;
+  color: var(--primary-dark);
+  font-style: italic;
+  background: var(--primary-tint);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* ---------------- BUTTONS ---------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(6, 95, 70, 0.25);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btn-success {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-main);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+.form-actions {
+  margin-top: 22px;
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ---------------- SUBMISSION CARDS (RIWAYAT) ---------------- */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+}
+
+.search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.search-box input {
+  padding-left: 36px;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submission-item {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.submission-item:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.item-pka {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.item-activity {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.item-meta {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.item-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.item-nominal {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.badge-draft { background: #fef3c7; color: #b45309; }
+.badge-printed { background: #e0f2fe; color: #0369a1; }
+.badge-spp { background: #dcfce7; color: #15803d; }
+.badge-done { background: #f3e8ff; color: #7e22ce; }
+
+/* ---------------- DASHBOARD KAUR KEUANGAN ---------------- */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.metric-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-card.bg-highlight {
+  background: var(--primary-tint);
+  border-color: #a7f3d0;
+}
+
+.metric-title {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.metric-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.text-success { color: var(--success) !important; }
+.text-muted { color: var(--text-sub) !important; }
+.text-danger { color: var(--danger) !important; }
+
+.rekap-action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  margin-top: 10px;
+}
+
+.rekap-action-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.rekap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.rekap-table th {
+  background: #f8fafc;
+  padding: 10px 8px;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  font-weight: 700;
+}
+
+.rekap-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+/* ---------------- SETTINGS ---------------- */
+.settings-group-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 18px 0 10px 0;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 6px;
+}
+
+/* ---------------- BOTTOM NAV ---------------- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.04);
+  z-index: 99;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.nav-btn i {
+  font-size: 1.2rem;
+}
+
+.nav-btn.active {
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.nav-btn.active i {
+  color: var(--primary);
+}
+
+/* ---------------- EMPTY STATE ---------------- */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state i {
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+/* ---------------- TOAST ---------------- */
+.toast {
+  position: fixed;
+  bottom: 74px;
+  left: 50%;
+  transform: translateX(-50%) translateY(50px);
+  background: rgba(17, 24, 39, 0.95);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 200;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================================================
+   OFFICIAL LETTER SHEET (PRINT FORMAT A4/F4)
+   ========================================================================== */
+.print-modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px 10px;
+}
+
+.print-modal-backdrop.open {
+  display: block;
+}
+
+.print-modal-container {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.print-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+.official-letter-sheet {
+  background: #ffffff;
+  padding: 35px 45px;
+  border-radius: 4px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  color: #000000;
+  font-family: 'Times New Roman', Times, serif; /* Standar persuratan dinas */
+  line-height: 1.35;
+}
+
+/* Kop Surat (Tabel Presisi Anti-Geser) */
+.kop-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: none !important;
+  margin-bottom: 4px;
+}
+
+.kop-table td {
+  border: none !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+}
+
+.kop-logo-cell {
+  width: 75px;
+  text-align: left;
+}
+
+.kop-spacer-cell {
+  width: 75px;
+}
+
+.kop-logo-img {
+  width: 65px;
+  height: 75px;
+  object-fit: contain;
+  display: block;
+}
+
+.kop-text-cell {
+  text-align: center;
+}
+
+.kop-text-cell h3 {
+  font-size: 12pt;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.kop-text-cell h2 {
+  font-size: 15pt;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin: 2px 0;
+  line-height: 1.2;
+}
+
+.kop-text-cell p {
+  font-size: 9pt;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.sig-row-second {
+  margin-top: 14px;
+}
+
+.kop-separator {
+  border-top: 3px solid #000000;
+  border-bottom: 1px solid #000000;
+  height: 2px;
+  margin: 8px 0 18px 0;
+}
+
+/* Judul Surat */
+.letter-title-section {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.letter-title-section h4 {
+  font-size: 12pt;
+  font-weight: 800;
+  text-decoration: underline;
+  margin: 0;
+}
+
+.sub-title-doc {
+  font-size: 9.5pt;
+  font-weight: 700;
+  display: block;
+}
+
+.doc-reg-number {
+  font-size: 10pt;
+  margin-top: 4px;
+}
+
+/* Metadata Kegiatan */
+.doc-meta-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+  margin-bottom: 14px;
+}
+
+.doc-meta-table td {
+  padding: 3px 2px;
+  vertical-align: top;
+}
+
+.doc-paragraph {
+  font-size: 10.5pt;
+  text-align: justify;
+  margin-bottom: 12px;
+  text-indent: 30px;
+}
+
+/* Tabel Rincian Belanja Surat */
+.doc-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+  margin-bottom: 8px;
+}
+
+.doc-items-table th,
+.doc-items-table td {
+  border: 1px solid #000000;
+  padding: 5px 6px;
+}
+
+.doc-items-table th {
+  background: #f2f2f2;
+  font-weight: bold;
+}
+
+.doc-total-row td {
+  background: #fafafa;
+}
+
+/* Terbilang */
+.doc-terbilang-box {
+  border: 1px solid #000000;
+  padding: 6px 10px;
+  font-size: 10pt;
+  font-style: italic;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.doc-disclaimer {
+  font-size: 10pt;
+  text-align: justify;
+  margin-bottom: 24px;
+  text-indent: 30px;
+}
+
+/* Signatures */
+.signatures-wrapper {
+  margin-top: 10px;
+}
+
+.sig-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sig-col {
+  width: 46%;
+  text-align: center;
+  font-size: 10.5pt;
+}
+
+.sig-header {
+  font-size: 9.5pt;
+  margin-bottom: 2px;
+}
+
+.sig-role {
+  font-weight: bold;
+}
+
+.sig-space {
+  height: 65px; /* Signature empty space */
+}
+
+.sig-name {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.sig-meta {
+  font-size: 8.5pt;
+  color: #333333;
+}
+
+.doc-footer-note {
+  margin-top: 25px;
+  font-size: 8pt;
+  font-style: italic;
+  border-top: 1px dotted #888888;
+  padding-top: 4px;
+}
+
+/* ==========================================================================
+   PRINT MEDIA RULES (CETAK LANGSUNG KE PRINTER / PDF)
+   ========================================================================== */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    font-size: 9.5pt !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* KUNCI: Sembunyikan semua modal saat print, KECUALI modal yang sedang dibuka (.open) */
+  .print-modal-backdrop {
+    display: none !important;
+  }
+
+  .print-modal-backdrop.open {
+    display: block !important;
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-modal-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .official-letter-sheet {
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Kop Ringkas & Pas di A4 (Tabel Presisi Simetris Anti-Geser & Anti-Terpotong) */
+  .kop-table {
+    width: 100% !important;
+    margin-bottom: 2px !important;
+    border-collapse: collapse !important;
+    border: none !important;
+  }
+  .kop-table td {
+    border: none !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+  }
+  .kop-logo-cell {
+    width: 58px !important;
+    text-align: left !important;
+  }
+  .kop-spacer-cell {
+    width: 58px !important;
+    padding: 0 !important;
+  }
+  .kop-logo-img {
+    width: 50px !important;
+    height: 58px !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+  .kop-text-cell {
+    text-align: center !important;
+  }
+  .kop-text-cell h3 {
+    font-size: 10pt !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    line-height: 1.15 !important;
+  }
+  .kop-text-cell h2 {
+    font-size: 12.5pt !important;
+    font-weight: 800 !important;
+    margin: 1px 0 !important;
+    line-height: 1.15 !important;
+  }
+  .kop-text-cell p {
+    font-size: 7.5pt !important;
+    font-style: italic !important;
+    margin: 0 !important;
+    line-height: 1.15 !important;
+  }
+  .kop-separator {
+    border-top: 2.5px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+    height: 2px !important;
+    margin: 3px 0 8px 0 !important;
+  }
+
+  /* Isi Dokumen Kompak & Presisi Samping */
+  .letter-title-section {
+    margin-bottom: 8px !important;
+    text-align: center !important;
+  }
+  .letter-title-section h4 {
+    font-size: 10.5pt !important;
+    line-height: 1.2 !important;
+  }
+  .sub-title-doc {
+    font-size: 8.5pt !important;
+  }
+  .doc-reg-number {
+    font-size: 8.5pt !important;
+    margin-top: 2px !important;
+  }
+  .doc-meta-table {
+    font-size: 9pt !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+  .doc-meta-table td {
+    padding: 1.5px 2px !important;
+  }
+  .doc-paragraph {
+    font-size: 9pt !important;
+    margin-bottom: 6px !important;
+    line-height: 1.25 !important;
+    text-indent: 20px !important;
+    text-align: justify !important;
+  }
+  .doc-items-table {
+    font-size: 9pt !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+  .doc-items-table th, .doc-items-table td {
+    padding: 3px 6px !important;
+  }
+  .doc-terbilang-box {
+    font-size: 8.5pt !important;
+    padding: 3px 6px !important;
+    margin-bottom: 6px !important;
+    border: 1px solid #000000 !important;
+    width: 100% !important;
+  }
+  .doc-commitment-box {
+    margin: 6px 0 8px 0 !important;
+    padding: 5px 8px !important;
+    border: 1px solid #000000 !important;
+    width: 100% !important;
+  }
+  .doc-commitment-box p {
+    font-size: 8.5pt !important;
+    line-height: 1.2 !important;
+    text-align: justify !important;
+  }
+
+  /* Tanda Tangan Pas, Seimbang, & Aman dari Tepi Kanan */
+  .signatures-wrapper {
+    margin-top: 6px !important;
+    width: 100% !important;
+  }
+  .sig-col {
+    font-size: 8.5pt !important;
+    width: 45% !important;
+  }
+  .sig-header {
+    font-size: 8pt !important;
+  }
+  .sig-space {
+    height: 38px !important;
+  }
+  .sig-row {
+    margin-top: 6px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+  .sig-name {
+    font-weight: bold !important;
+    text-decoration: underline !important;
+  }
+  .sig-meta {
+    font-size: 7.5pt !important;
+    line-height: 1.15 !important;
+    color: #222222 !important;
+    margin-top: 1px !important;
+  }
+  .doc-footer-note {
+    margin-top: 8px !important;
+    font-size: 7.5pt !important;
+  }
+
+  /* Kuitansi Kompak di Print */
+  .receipt-info-table {
+    font-size: 9pt !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+  }
+  .receipt-info-table td {
+    padding: 2px 4px !important;
+  }
+  .rcp-photo-img {
+    max-height: 80px !important;
+  }
+  .rcp-photo-container {
+    margin: 6px 0 8px 0 !important;
+    padding: 3px !important;
+  }
+  .rcp-disclaimer-box {
+    margin: 6px 0 !important;
+    padding: 4px 6px !important;
+    font-size: 8pt !important;
+  }
+
+  /* Standar Margin Dinas Resmi (Kiri 20mm untuk hekter/binder, Kanan 18mm aman dari roller printer) */
+  @page {
+    size: A4 portrait;
+    margin: 12mm 18mm 12mm 20mm;
+  }
+}
+
+/* ---------------- RESPONSIVE DESKTOP ENHANCEMENT ---------------- */
+@media (min-width: 768px) {
+  .bottom-nav {
+    display: none;
+  }
+
+  body {
+    padding-bottom: 20px;
+  }
+
+  .app-header .header-container {
+    padding: 4px 0;
+  }
+
+  .main-content {
+    margin-top: 24px;
+  }
+
+  /* Desktop Tab Bar Header */
+  .desktop-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+}
+
+/* ==========================================================================
+   ENHANCEMENTS FOR REVISED "DAFTAR KEGIATAN & PAGU"
+   ========================================================================== */
+.activities-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.activity-input-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+.activity-input-card:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.12);
+}
+
+.activity-chips-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 10px 0;
+}
+
+.activity-chip {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.74rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   COMMITMENT ALERT & SPJ DISCLAIMER BOX
+   ========================================================================== */
+.commitment-alert {
+  margin-top: 18px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #166534;
+  font-size: 0.83rem;
+  line-height: 1.45;
+}
+
+.commitment-alert i {
+  font-size: 1.3rem;
+  color: #15803d;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.doc-commitment-box {
+  margin: 16px 0 20px 0;
+  border: 1.5px solid #000000;
+  padding: 10px 14px;
+  background: #fdfdfd;
+}
+
+.doc-commitment-box p {
+  font-size: 10pt;
+  line-height: 1.35;
+  text-indent: 0 !important;
+}
+
+/* ==========================================================================
+   RECEIPT (KUITANSI KAS) STYLES
+   ========================================================================== */
+.receipt-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+  margin-bottom: 12px;
+}
+
+.receipt-info-table td {
+  padding: 4px 2px;
+  vertical-align: middle;
+}
+
+.btn-receipt {
+  background: #f59e0b;
+  color: #ffffff;
+  border: none;
+}
+
+.btn-receipt:hover {
+  background: #d97706;
+}
+
+/* ==========================================================================
+   DESKTOP / LAPTOP HEADER NAVIGATION
+   ========================================================================== */
+.desktop-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.d-nav-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.d-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.d-nav-btn.active {
+  background: #ffffff;
+  color: var(--primary-dark);
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  border-color: #ffffff;
+}
+
+.d-nav-btn.active i {
+  color: var(--primary);
+}
+
+.btn-highlight-kaur {
+  background: #f59e0b !important;
+  color: #ffffff !important;
+  border-color: #f59e0b !important;
+  font-weight: 700;
+}
+
+.btn-highlight-kaur:hover {
+  background: #d97706 !important;
+}
+
+.btn-highlight-kaur.active {
+  background: #ffffff !important;
+  color: #b45309 !important;
+  border-color: #f59e0b !important;
+}
+
+.btn-highlight-kaur.active i {
+  color: #b45309 !important;
+}
+
+/* Hide desktop nav on very small mobile screens (< 768px), and show bottom nav */
+@media (max-width: 767px) {
+  .desktop-nav-menu {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   PHOTO CAPTURE & PROOF STYLES
+   ========================================================================== */
+.photo-upload-section {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.photo-action-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.photo-preview-box {
+  margin-top: 10px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background: #000;
+  max-height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.photo-preview-box img {
+  max-width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+}
+
+.photo-preview-tag {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(22, 101, 52, 0.9);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Photo Display on Official Printed Receipt */
+.rcp-photo-container {
+  margin: 14px 0 16px 0;
+  border: 1px dashed #666;
+  padding: 8px;
+  text-align: center;
+  background: #fafafa;
+  page-break-inside: avoid;
+}
+
+.rcp-photo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rcp-photo-img {
+  max-height: 140px;
+  max-width: 90%;
+  border-radius: 4px;
+  border: 1px solid #999;
+  object-fit: contain;
+}
+
+.btn-photo-view {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.btn-photo-view:hover {
+  background: #bae6fd;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}

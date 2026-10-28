@@ -1,0 +1,18 @@
+{
+  "name": "E-PraSPP Desa Tanjung Manis",
+  "short_name": "E-PraSPP",
+  "description": "Aplikasi Pengajuan Rencana Pencairan Dana Kegiatan (Pra-SPP) Desa Tanjung Manis, Kec. Sangkulirang, Kab. Kutai Timur",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#065f46",
+  "theme_color": "#065f46",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo-kutim.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

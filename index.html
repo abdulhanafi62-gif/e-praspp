@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>E-PraSPP Desa Tanjung Manis</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- PWA Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#065f46">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="logo-kutim.png">
+
+  <!-- Firebase SDK (Compat version for instant standalone execution) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top App Bar (Mobile & Desktop Header) -->
+  <header class="app-header no-print">
+    <div class="header-container">
+      <div class="brand">
+        <img src="logo-kutim.png" alt="Logo Kutai Timur" class="header-logo" onerror="this.style.display='none'">
+        <div class="brand-text">
+          <h1 id="headerVillageTitle">E-PraSPP</h1>
+          <p id="headerVillageSubtitle">Desa Tanjung Manis • Sangkulirang</p>
+        </div>
+      </div>
+
+      <!-- DESKTOP / LAPTOP NAVIGATION MENU -->
+      <nav class="desktop-nav-menu no-print">
+        <button class="d-nav-btn active" onclick="switchView('view-form', this)">
+          <i class="fa-solid fa-file-pen"></i> <span>Ajukan Kegiatan</span>
+        </button>
+        <button class="d-nav-btn" onclick="switchView('view-list', this)">
+          <i class="fa-solid fa-folder-open"></i> <span>Riwayat Pengajuan</span>
+        </button>
+        <button class="d-nav-btn btn-highlight-kaur" onclick="switchView('view-rekap', this)">
+          <i class="fa-solid fa-building-columns"></i> <span>Menu Kaur Keuangan</span>
+        </button>
+        <button class="d-nav-btn" onclick="switchView('view-settings', this)">
+          <i class="fa-solid fa-id-card"></i> <span>Profil Desa</span>
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <span class="cloud-status-badge" id="cloudStatusBadge" title="Status Sinkronisasi Cloud">
+          <i class="fa-solid fa-cloud"></i> <span id="cloudStatusText">Online Cloud</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content no-print">
+    
+    <!-- Tab 1: Form Pengajuan Khusus Per-PKA -->
+    <section id="view-form" class="app-view active">
+      <div class="card form-card">
+        <div class="card-header">
+          <div class="header-icon bg-emerald">
+            <i class="fa-solid fa-file-signature"></i>
+          </div>
+          <div>
+            <h2>Pengajuan Kegiatan oleh Pelaksana (PKA)</h2>
+            <p class="subtitle">Diisi oleh masing-masing Kasi / Kaur untuk kegiatan di bidangnya</p>
+          </div>
+        </div>
+
+        <form id="submissionForm" onsubmit="event.preventDefault(); saveAndPreviewSubmission();">
+          
+          <!-- Identitas PKA Pengaju -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="pkaRole"><i class="fa-solid fa-user-tie"></i> Jabatan Pelaksana Kegiatan (PKA) <span class="req">*</span></label>
+              <select id="pkaRole" required onchange="handlePkaChange()">
+                <option value="" disabled selected>-- Pilih Jabatan Anda --</option>
+                <option value="Kasi Pemerintahan">Kasi Pemerintahan</option>
+                <option value="Kasi Kesejahteraan">Kasi Kesejahteraan</option>
+                <option value="Kasi Pelayanan">Kasi Pelayanan</option>
+                <option value="Kaur Umum & Perencanaan">Kaur Umum & Perencanaan</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="pkaName"><i class="fa-solid fa-id-badge"></i> Nama Pejabat PKA <span class="req">*</span></label>
+              <input type="text" id="pkaName" placeholder="Nama Lengkap Pejabat" required>
+            </div>
+          </div>
+
+          <!-- Tahapan Pencairan & Tanggal -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="fundStage"><i class="fa-solid fa-layer-group"></i> Tahapan Pencairan & Sumber Dana <span class="req">*</span></label>
+              <select id="fundStage" required>
+                <option value="ADD (Alokasi Dana Desa) - Tahap 1">ADD - Tahap 1</option>
+                <option value="ADD (Alokasi Dana Desa) - Tahap 2" selected>ADD - Tahap 2</option>
+                <option value="ADD (Alokasi Dana Desa) - Tahap 3">ADD - Tahap 3</option>
+                <option value="DDS (Dana Desa) - Tahap 1">DDS (Dana Desa) - Tahap 1</option>
+                <option value="DDS (Dana Desa) - Tahap 2">DDS (Dana Desa) - Tahap 2</option>
+                <option value="PBH (Bagi Hasil Pajak & Retribusi)">PBH (Bagi Hasil Pajak & Retribusi)</option>
+                <option value="PADes (Pendapatan Asli Desa)">PADes (Pendapatan Asli Desa)</option>
+                <option value="BK-KAB (Bantuan Keuangan Kabupaten)">BK-KAB (Bantuan Keuangan Kab. Kutim)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="subDate"><i class="fa-solid fa-calendar-day"></i> Tanggal Pengajuan <span class="req">*</span></label>
+              <input type="date" id="subDate" required>
+            </div>
+          </div>
+
+          <!-- Section: Daftar Kegiatan & Pagu Anggaran PKA Ini -->
+          <div class="items-section">
+            <div class="items-header">
+              <h3><i class="fa-solid fa-list-check"></i> Daftar Kegiatan yang Akan Dilaksanakan</h3>
+              <button type="button" class="btn btn-sm btn-outline" onclick="addActivityRow()">
+                <i class="fa-solid fa-plus"></i> Tambah Kegiatan
+              </button>
+            </div>
+            <p class="section-help">Masukkan nama kegiatan (judul besar) dan pagu anggaran yang siap dilaksanakan di bidang Anda.</p>
+
+            <div class="activities-container" id="activitiesContainer">
+              <!-- Dynamic Activity Rows -->
+            </div>
+
+            <!-- Total Box -->
+            <div class="total-summary-card">
+              <div class="total-row">
+                <span class="total-label">TOTAL PENGAJUAN DANA:</span>
+                <span class="total-value" id="formTotalDisplay">Rp 0</span>
+              </div>
+              <div class="terbilang-box" id="formTerbilangDisplay">
+                <em>Nol Rupiah</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Klausul Kesepakatan Bersama (Aman untuk Kaur & PKA) -->
+          <div class="commitment-alert">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>
+              <strong>Pernyataan Administrasi & SPJ:</strong>
+              <p>
+                <em>"Surat pengajuan ini dibuat sebagai dasar kelengkapan administrasi penerbitan SPP. Pelaksana Kegiatan bertanggung jawab atas pelaksanaan teknis kegiatan, dan penyelesaian SPJ diselesaikan berdasarkan bukti transaksi riil atas belanja yang disetujui Kepala Desa selaku Pemegang Kekuasaan Pengelolaan Keuangan Desa (PKPKD)."</em>
+              </p>
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-file-pdf"></i> Simpan ke Server & Cetak Surat Pengajuan (PDF)
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Tab 2: Riwayat Pengajuan Semua Kegiatan -->
+    <section id="view-list" class="app-view">
+      <div class="card">
+        <div class="card-header space-between">
+          <div>
+            <h2>Riwayat Pengajuan PKA</h2>
+            <p class="subtitle">Arsip online daftar pengajuan dari masing-masing Kasi & Kaur</p>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="loadAllSubmissions(true)">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Cari nama kegiatan / pelaksana..." oninput="filterSubmissions()">
+          </div>
+          <select id="pkaFilter" onchange="filterSubmissions()">
+            <option value="ALL">Semua Pelaksana (PKA)</option>
+            <option value="Kasi Pemerintahan">Kasi Pemerintahan</option>
+            <option value="Kasi Kesejahteraan">Kasi Kesejahteraan</option>
+            <option value="Kasi Pelayanan">Kasi Pelayanan</option>
+            <option value="Kaur Umum & Perencanaan">Kaur Umum & Perencanaan</option>
+          </select>
+        </div>
+
+        <!-- Submission Cards Container -->
+        <div id="submissionsList" class="submissions-list">
+          <div class="empty-state">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>Belum ada pengajuan kegiatan yang tersimpan.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Khusus Kaur Keuangan (Rekap, Kas Bank, & Kuitansi) -->
+    <section id="view-rekap" class="app-view">
+      <div class="card">
+        <div class="card-header">
+          <div class="header-icon bg-gold">
+            <i class="fa-solid fa-building-columns"></i>
+          </div>
+          <div>
+            <h2>Dashboard Kaur Keuangan (Bendahara Desa)</h2>
+            <p class="subtitle">Kontrol pencairan dana bank, cetak kuitansi serah terima uang kas & SPP</p>
+          </div>
+        </div>
+
+        <!-- Metric Badges -->
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span class="metric-title">Total Seluruh Pengajuan</span>
+            <span class="metric-val" id="metricTotalSubmitted">Rp 0</span>
+            <span class="metric-sub" id="metricCountSubmitted">0 Berkas Pengajuan</span>
+          </div>
+          <div class="metric-card bg-highlight">
+            <span class="metric-title">Siap Ditarik di Bank (Sudah SPP)</span>
+            <span class="metric-val text-success" id="metricTotalReady">Rp 0</span>
+            <span class="metric-sub" id="metricCountReady">0 Kegiatan</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Sudah Diserahterimakan (Ada Kuitansi)</span>
+            <span class="metric-val text-muted" id="metricTotalDisbursed">Rp 0</span>
+            <span class="metric-sub" id="metricCountDisbursed">0 Berkas Selesai</span>
+          </div>
+        </div>
+
+        <div class="rekap-action-header">
+          <h3><i class="fa-solid fa-list-check"></i> Daftar Berkas Pengajuan & Penyerahan Uang</h3>
+          <button class="btn btn-sm btn-outline" onclick="printWithdrawalSummary()">
+            <i class="fa-solid fa-print"></i> Cetak Rekap Penarikan Kas Bank
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="rekap-table" id="rekapTable">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>Pelaksana Kegiatan (PKA)</th>
+                <th>Tahapan / Sumber</th>
+                <th>Total Nominal</th>
+                <th>Penerima Fisik Uang</th>
+                <th>Foto Bukti</th>
+                <th>Status Berkas</th>
+                <th>Aksi Kuitansi & Status</th>
+              </tr>
+            </thead>
+            <tbody id="rekapTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Pengaturan & Profil Desa / Pejabat -->
+    <section id="view-settings" class="app-view">
+      <div class="card">
+        <div class="card-header">
+          <div class="header-icon bg-blue">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+          <div>
+            <h2>Profil Pemerintah Desa & Daftar Pejabat</h2>
+            <p class="subtitle">Ubah nama desa, alamat kantor, nama Kades, Sekdes, dan seluruh Kasi/Kaur</p>
+          </div>
+        </div>
+
+        <form id="settingsForm" onsubmit="event.preventDefault(); saveVillageSettings();">
+          
+          <h3 class="settings-group-title"><i class="fa-solid fa-landmark"></i> Identitas Pemerintah Desa</h3>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Nama Desa</label>
+              <input type="text" id="cfgVillage" value="Tanjung Manis" required>
+            </div>
+            <div class="form-group flex-1">
+              <label>Kecamatan</label>
+              <input type="text" id="cfgDistrict" value="Sangkulirang" required>
+            </div>
+            <div class="form-group flex-1">
+              <label>Kabupaten</label>
+              <input type="text" id="cfgRegency" value="Kutai Timur" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Alamat Kantor Desa (Tampil di Kop Surat)</label>
+            <input type="text" id="cfgAddress" value="Jl. Poros Desa Tanjung Manis, Kode Pos 75684">
+          </div>
+
+          <h3 class="settings-group-title"><i class="fa-solid fa-user-shield"></i> Pimpinan & Pengelola Keuangan Desa</h3>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Nama Kepala Desa (Kades)</label>
+              <input type="text" id="cfgKadesName" placeholder="Nama Lengkap Kades" value="Kades Tanjung Manis">
+            </div>
+            <div class="form-group flex-1">
+              <label>Nama Sekretaris Desa (Sekdes)</label>
+              <input type="text" id="cfgSekdesName" placeholder="Nama Lengkap Sekdes" value="Sekdes Tanjung Manis">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Nama Kaur Keuangan / Bendahara (Anda)</label>
+              <input type="text" id="cfgKaurKeuanganName" placeholder="Nama Kaur Keuangan" value="Kaur Keuangan">
+            </div>
+            <div class="form-group flex-1">
+              <label>Nama Operator Siskeudes</label>
+              <input type="text" id="cfgOperatorName" placeholder="Nama Operator Siskeudes" value="Operator Siskeudes">
+            </div>
+          </div>
+
+          <h3 class="settings-group-title"><i class="fa-solid fa-users"></i> Nama Pejabat Pelaksana Kegiatan (PKA)</h3>
+          <p class="section-help">Nama-nama ini akan otomatis terisi ketika para Kasi/Kaur memilih jabatannya di formulir.</p>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Nama Kasi Pemerintahan</label>
+              <input type="text" id="cfgPkaPem" placeholder="Nama Kasi Pemerintahan" value="Kasi Pemerintahan">
+            </div>
+            <div class="form-group flex-1">
+              <label>Nama Kasi Kesejahteraan</label>
+              <input type="text" id="cfgPkaKesra" placeholder="Nama Kasi Kesejahteraan" value="Kasi Kesejahteraan">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Nama Kasi Pelayanan</label>
+              <input type="text" id="cfgPkaPelayanan" placeholder="Nama Kasi Pelayanan" value="Kasi Pelayanan">
+            </div>
+            <div class="form-group flex-1">
+              <label>Nama Kaur Umum & Perencanaan</label>
+              <input type="text" id="cfgPkaUmum" placeholder="Nama Kaur Umum & Perencanaan" value="Kaur Umum & Perencanaan">
+            </div>
+          </div>
+
+          <h3 class="settings-group-title"><i class="fa-solid fa-cloud-arrow-up"></i> Konfigurasi Cloud Database (Online)</h3>
+          <div class="form-group">
+            <label>Firebase Database URL (Opsional / Custom):</label>
+            <input type="text" id="cfgFirebaseUrl" placeholder="https://nama-project-default-rtdb.firebaseio.com">
+          </div>
+
+          <div class="form-actions space-between">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Profil & Pengaturan
+            </button>
+            <button type="button" class="btn btn-outline text-danger" onclick="backupAndExportData()">
+              <i class="fa-solid fa-download"></i> Backup Data (JSON)
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar (Muncul di layar HP) -->
+  <nav class="bottom-nav no-print">
+    <button class="nav-btn active" onclick="switchView('view-form', this)">
+      <i class="fa-solid fa-file-pen"></i>
+      <span>Ajukan</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('view-list', this)">
+      <i class="fa-solid fa-folder-open"></i>
+      <span>Riwayat</span>
+    </button>
+    <button class="nav-btn btn-highlight-kaur" onclick="switchView('view-rekap', this)">
+      <i class="fa-solid fa-building-columns"></i>
+      <span>Kaur Keu</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('view-settings', this)">
+      <i class="fa-solid fa-id-card"></i>
+      <span>Profil Desa</span>
+    </button>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- MODAL / AREA CETAK DOKUMEN SURAT RESMI (PRA-SPP)             -->
+  <!-- HANYA DOKUMEN INI YANG DICETAK SAAT MEMBUKA MODAL INI        -->
+  <!-- ============================================================ -->
+  <div id="printModal" class="print-modal-backdrop">
+    <div class="print-modal-container">
+      <div class="print-modal-actions no-print">
+        <button class="btn btn-secondary btn-sm" onclick="closePrintModal()">
+          <i class="fa-solid fa-arrow-left"></i> Kembali
+        </button>
+        <div class="actions-right">
+          <button class="btn btn-success btn-sm" onclick="shareToWhatsApp()">
+            <i class="fa-brands fa-whatsapp"></i> Bagikan Info ke WA
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="printClean('printModal')">
+            <i class="fa-solid fa-print"></i> Cetak Daftar Usulan (PDF)
+          </button>
+        </div>
+      </div>
+
+      <!-- KERTAS SURAT RESMI PEMERINTAH DESA (A4 FORMAT) -->
+      <div class="official-letter-sheet" id="officialLetterSheet">
+        <!-- KOP SURAT RESMI (TABEL PRESISI ANTI-TERPOTONG & SIMETRIS) -->
+        <table class="kop-table">
+          <tr>
+            <td class="kop-logo-cell">
+              <img src="logo-kutim.png" alt="Logo Kutai Timur" class="kop-logo-img" onerror="this.style.display='none'">
+            </td>
+            <td class="kop-text-cell">
+              <h3 id="kopRegency">PEMERINTAH KABUPATEN KUTAI TIMUR</h3>
+              <h3 id="kopDistrict">KECAMATAN SANGKULIRANG</h3>
+              <h2 id="kopVillage">PEMERINTAH DESA TANJUNG MANIS</h2>
+              <p id="kopAddress">Alamat: Jl. Poros Desa Tanjung Manis, Kode Pos 75684</p>
+            </td>
+            <td class="kop-spacer-cell"></td>
+          </tr>
+        </table>
+        <div class="kop-separator"></div>
+
+        <!-- JUDUL SURAT -->
+        <div class="letter-title-section">
+          <h4>SURAT PENGAJUAN RENCANA PELAKSANAAN KEGIATAN & PENCAIRAN DANA (PRA-SPP)</h4>
+          <span class="sub-title-doc">TAHUN ANGGARAN 2026</span>
+          <div class="doc-reg-number" id="docRegNumber">Nomor: 001/PRA-SPP/TM/X/2026</div>
+        </div>
+
+        <!-- ISI KETERANGAN PKA & TAHAPAN -->
+        <table class="doc-meta-table">
+          <tr>
+            <td style="width: 28%;">Pelaksana Kegiatan (PKA)</td>
+            <td style="width: 3%;">:</td>
+            <td style="width: 69%; font-weight: 700;" id="docPkaRole">-</td>
+          </tr>
+          <tr>
+            <td>Nama Pejabat PKA</td>
+            <td>:</td>
+            <td id="docPkaName">-</td>
+          </tr>
+          <tr>
+            <td>Tahapan / Sumber Dana</td>
+            <td>:</td>
+            <td style="font-weight: 700;" id="docFundStage">-</td>
+          </tr>
+          <tr>
+            <td>Tanggal Pengajuan</td>
+            <td>:</td>
+            <td id="docDate">-</td>
+          </tr>
+        </table>
+
+        <!-- PENGANTAR -->
+        <p class="doc-paragraph">
+          Berdasarkan Anggaran Pendapatan dan Belanja Desa (APBDes) Tahun Anggaran 2026, bersama ini saya selaku Pelaksana Kegiatan Anggaran (PKA) menyampaikan daftar kegiatan di bidang saya yang telah siap untuk dilaksanakan secara fisik dan administratif di lapangan untuk diterbitkan Surat Permintaan Pembayaran (SPP) melalui aplikasi Siskeudes, dengan rincian kegiatan sebagai berikut:
+        </p>
+
+        <!-- TABEL DAFTAR KEGIATAN & PAGU -->
+        <table class="doc-items-table">
+          <thead>
+            <tr>
+              <th style="width: 8%; text-align: center;">No</th>
+              <th style="width: 64%;">Nama Kegiatan yang Akan Dilaksanakan</th>
+              <th style="width: 28%; text-align: right;">Jumlah Pagu Anggaran (Rp)</th>
+            </tr>
+          </thead>
+          <tbody id="docItemsTableBody">
+            <!-- Activities injected here -->
+          </tbody>
+          <tfoot>
+            <tr class="doc-total-row">
+              <td colspan="2" style="text-align: right; font-weight: 800;">TOTAL DANA YANG DIAJUKAN:</td>
+              <td style="text-align: right; font-weight: 800;" id="docTotalAmount">Rp 0</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- TERBILANG -->
+        <div class="doc-terbilang-box">
+          <strong>Terbilang: </strong> <span id="docTerbilangText">Nol Rupiah</span>
+        </div>
+
+        <!-- KLAUSUL TANGGUNG JAWAB & PERLINDUNGAN HUKUM PKA -->
+        <div class="doc-commitment-box">
+          <p class="doc-disclaimer" id="docDisclaimerText" style="margin-bottom: 0;">
+            Demikian surat pengajuan rencana pelaksanaan kegiatan ini dibuat sebagai dasar kelengkapan administrasi penerbitan Surat Permintaan Pembayaran (SPP). Pelaksana Kegiatan bertanggung jawab atas pelaksanaan teknis kegiatan, dan penyelesaian Surat Pertanggungjawaban (SPJ) diselesaikan berdasarkan bukti transaksi riil atas belanja yang disetujui Kepala Desa selaku Pemegang Kekuasaan Pengelolaan Keuangan Desa (PKPKD).
+          </p>
+        </div>
+
+        <!-- KOLOM TANDA TANGAN 4 PIHAK (RESMI) -->
+        <div class="signatures-wrapper">
+          <div class="sig-row">
+            <!-- Kolom 1: PKA yang Mengajukan -->
+            <div class="sig-col">
+              <div class="sig-header">Yang Mengajukan:</div>
+              <div class="sig-role" id="sigPkaRole">Pelaksana Kegiatan (PKA)</div>
+              <div class="sig-space"></div>
+              <div class="sig-name" id="sigPkaName">( ........................................ )</div>
+              <div class="sig-meta">Pejabat Pelaksana Kegiatan</div>
+            </div>
+
+            <!-- Kolom 2: Sekdes -->
+            <div class="sig-col">
+              <div class="sig-header">Diverifikasi Administrasi:</div>
+              <div class="sig-role">Sekretaris Desa</div>
+              <div class="sig-space"></div>
+              <div class="sig-name" id="sigSekdesName">( ........................................ )</div>
+              <div class="sig-meta">Koordinator PPKD</div>
+            </div>
+          </div>
+
+          <div class="sig-row sig-row-second">
+            <!-- Kolom 3: Operator Siskeudes -->
+            <div class="sig-col">
+              <div class="sig-header">Diterima untuk Penerbitan SPP:</div>
+              <div class="sig-role">Operator Siskeudes</div>
+              <div class="sig-space"></div>
+              <div class="sig-name" id="sigOperatorName">( ........................................ )</div>
+              <div class="sig-meta">Tgl Terima Berkas: ..... / ..... / 2026</div>
+            </div>
+
+            <!-- Kolom 4: Kades -->
+            <div class="sig-col">
+              <div class="sig-header">Mengetahui & Menyetujui:</div>
+              <div class="sig-role" id="sigKadesRole">Kepala Desa Tanjung Manis</div>
+              <div class="sig-space"></div>
+              <div class="sig-name" id="sigKadesName">( ........................................ )</div>
+              <div class="sig-meta">Pemegang Kekuasaan Pengelolaan Keuangan Desa</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-footer-note">
+          * Lembar dokumen ini diserahkan kepada Operator Siskeudes untuk dasar cetak SPP resmi, dan salinannya dipegang oleh Kaur Keuangan untuk penarikan dana dari Rekening Kas Desa di Bank.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL / AREA CETAK KUITANSI SERAH TERIMA UANG KAS            -->
+  <!-- HANYA DOKUMEN INI YANG DICETAK SAAT MEMBUKA MODAL INI        -->
+  <!-- ============================================================ -->
+  <div id="receiptModal" class="print-modal-backdrop">
+    <div class="print-modal-container">
+      <div class="print-modal-actions no-print">
+        <button class="btn btn-secondary btn-sm" onclick="closeReceiptModal()">
+          <i class="fa-solid fa-arrow-left"></i> Kembali
+        </button>
+        <div class="actions-right">
+          <button class="btn btn-warning btn-sm" onclick="editReceiptCurrent()" title="Edit data penerima / nominal / foto kuitansi">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Kuitansi
+          </button>
+          <button class="btn btn-outline text-danger btn-sm" onclick="deleteReceiptCurrent()" title="Batalkan dan hapus kuitansi ini">
+            <i class="fa-solid fa-trash"></i> Hapus Kuitansi
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="printClean('receiptModal')">
+            <i class="fa-solid fa-print"></i> Cetak Kuitansi (PDF)
+          </button>
+        </div>
+      </div>
+
+      <!-- KERTAS KUITANSI RESMI PENYERAHAN UANG (A4 / F4) -->
+      <div class="official-letter-sheet" id="officialReceiptSheet">
+        <!-- KOP SURAT RESMI (TABEL PRESISI ANTI-TERPOTONG & SIMETRIS) -->
+        <table class="kop-table">
+          <tr>
+            <td class="kop-logo-cell">
+              <img src="logo-kutim.png" alt="Logo Kutai Timur" class="kop-logo-img" onerror="this.style.display='none'">
+            </td>
+            <td class="kop-text-cell">
+              <h3 id="rcpRegency">PEMERINTAH KABUPATEN KUTAI TIMUR</h3>
+              <h3 id="rcpDistrict">KECAMATAN SANGKULIRANG</h3>
+              <h2 id="rcpVillage">PEMERINTAH DESA TANJUNG MANIS</h2>
+              <p id="rcpAddress">Alamat: Jl. Poros Desa Tanjung Manis, Kode Pos 75684</p>
+            </td>
+            <td class="kop-spacer-cell"></td>
+          </tr>
+        </table>
+        <div class="kop-separator"></div>
+
+        <!-- JUDUL KUITANSI -->
+        <div class="letter-title-section">
+          <h4>KUITANSI / TANDA TERIMA PENYERAHAN UANG KAS DESA</h4>
+          <span class="sub-title-doc">BUKTI PENGELUARAN KAS BENDAHARA DESA</span>
+          <div class="doc-reg-number" id="rcpRegNo">Nomor Kuitansi: KW-001/KAS/TM/X/2026</div>
+        </div>
+
+        <!-- DATA TRANSAKSI PENYERAHAN UANG -->
+        <table class="receipt-info-table">
+          <tr>
+            <td style="width: 25%;">Telah Diterima Dari</td>
+            <td style="width: 3%;">:</td>
+            <td style="width: 72%; font-weight: 700;">Kaur Keuangan (Bendahara Desa) Tanjung Manis</td>
+          </tr>
+          <tr>
+            <td>Nama Bendahara</td>
+            <td>:</td>
+            <td id="rcpKaurName">-</td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top; color: var(--primary-dark); font-weight: 700;">Diserahkan Kepada</td>
+            <td style="vertical-align: top;">:</td>
+            <td>
+              <div style="font-size: 11pt; font-weight: 800; color: #b91c1c;" id="rcpReceiverName">-</div>
+              <div style="font-size: 9.5pt; font-weight: 600;" id="rcpReceiverRole">-</div>
+            </td>
+          </tr>
+          <tr>
+            <td>Uang Sejumlah</td>
+            <td>:</td>
+            <td>
+              <div style="font-size: 12pt; font-weight: 800; color: #065f46;" id="rcpAmountText">Rp 0</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">Terbilang</td>
+            <td style="vertical-align: top;">:</td>
+            <td>
+              <div class="doc-terbilang-box" style="margin-bottom: 4px;" id="rcpTerbilangText">Nol Rupiah</div>
+            </td>
+          </tr>
+          <tr>
+            <td>Sumber Dana / Tahap</td>
+            <td>:</td>
+            <td style="font-weight: 700;" id="rcpFundStage">-</td>
+          </tr>
+          <tr>
+            <td>Tanggal Penyerahan</td>
+            <td>:</td>
+            <td id="rcpDate">-</td>
+          </tr>
+        </table>
+
+        <!-- RINCIAN KEGIATAN -->
+        <p class="doc-paragraph" style="margin-top: 14px; text-indent: 0;">
+          Uang tunai tersebut di atas diserahterimakan secara riil untuk membiayai rencana kegiatan sebagai berikut:
+        </p>
+
+        <table class="doc-items-table">
+          <thead>
+            <tr>
+              <th style="width: 8%; text-align: center;">No</th>
+              <th style="width: 64%;">Nama Kegiatan yang Dibiayai</th>
+              <th style="width: 28%; text-align: right;">Pagu Anggaran (Rp)</th>
+            </tr>
+          </thead>
+          <tbody id="rcpItemsTableBody">
+            <!-- Injected via JS -->
+          </tbody>
+          <tfoot>
+            <tr class="doc-total-row">
+              <td colspan="2" style="text-align: right; font-weight: 800;">TOTAL DANA YANG DISERAHKAN:</td>
+              <td style="text-align: right; font-weight: 800;" id="rcpTotalAmountFoot">Rp 0</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- PERNYATAAN PENERIMA UANG KAS (KUNCI PERLINDUNGAN HUKUM) -->
+        <div class="doc-commitment-box" style="border-left: 4px solid #b91c1c;">
+          <p style="font-size: 9.5pt; margin: 0; line-height: 1.4;">
+            <strong>PERNYATAAN PENERIMA KAS:</strong><br>
+            Fisik uang kas sejumlah tersebut di atas telah saya terima secara tunai dan penuh dari Kaur Keuangan. Terhitung sejak penandatanganan kuitansi ini, fisik uang berada di bawah penguasaan saya dan bukti-bukti pengeluaran/nota belanja belanja riil wajib diserahkan untuk kelengkapan Surat Pertanggungjawaban (SPJ).
+          </p>
+        </div>
+
+        <!-- LAMPIRAN FOTO DOKUMENTASI PENYERAHAN UANG (FITUR BARU) -->
+        <div id="rcpPhotoSection" class="rcp-photo-container" style="display: none;">
+          <div style="font-weight: 700; font-size: 9.5pt; margin-bottom: 6px; text-align: center;">
+            FOTO DOKUMENTASI PENYERAHAN UANG KAS DI LAPANGAN:
+          </div>
+          <div class="rcp-photo-wrapper">
+            <img id="rcpPhotoDisplay" src="" alt="Dokumentasi Penyerahan Uang" class="rcp-photo-img">
+          </div>
+        </div>
+
+        <!-- TANDA TANGAN SERAH TERIMA -->
+        <div class="signatures-wrapper" style="margin-top: 20px;">
+          <div class="sig-row">
+            <!-- Kolom 1: Yang Menyerahkan (Kaur Keuangan) -->
+            <div class="sig-col">
+              <div class="sig-header">Yang Menyerahkan Uang:</div>
+              <div class="sig-role">Kaur Keuangan (Bendahara Desa)</div>
+              <div class="sig-space"></div>
+              <div class="sig-name" id="sigRcpKaurName">( ........................................ )</div>
+              <div class="sig-meta">Pemerintah Desa Tanjung Manis</div>
+            </div>
+
+            <!-- Kolom 2: Yang Menerima Uang Fisik (Penerima Nyata) -->
+            <div class="sig-col">
+              <div class="sig-header">Yang Menerima Fisik Uang:</div>
+              <div class="sig-role" id="sigRcpReceiverRole">Penerima Uang Kas</div>
+              <div class="sig-space" style="display:flex; align-items:center; justify-content:center;">
+                <span style="border: 1px dashed #999; padding: 4px 10px; font-size: 8pt; color: #666;">Materai 10.000</span>
+              </div>
+              <div class="sig-name" id="sigRcpReceiverName">( ........................................ )</div>
+              <div class="sig-meta" id="sigRcpReceiverMeta">Tanda Tangan Asli Penerima Kas</div>
+            </div>
+          </div>
+
+          <div class="sig-row" style="margin-top: 25px; justify-content: center;">
+            <!-- Kolom 3: Mengetahui Sekdes -->
+            <div class="sig-col" style="width: 50%;">
+              <div class="sig-header">Mengetahui Verifikasi:</div>
+              <div class="sig-role">Sekretaris Desa</div>
+              <div class="sig-space"></div>
+              <div class="sig-name" id="sigRcpSekdesName">( ........................................ )</div>
+              <div class="sig-meta">Koordinator PPKD</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-footer-note">
+          * Kuitansi asli disimpan oleh Kaur Keuangan sebagai bukti pengeluaran kas BKU, dan salinan fotokopi dipegang oleh Penerima Uang.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog Pemilihan Penerima Kas + PENGAMBILAN FOTO (Popup Ringkas) -->
+  <div id="disburseSetupModal" class="print-modal-backdrop">
+    <div class="print-modal-container" style="max-width: 520px; margin-top: 30px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="header-icon bg-gold">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+          <div>
+            <h2>Serah Terima Uang & Bukti Foto</h2>
+            <p class="subtitle">Catat penerima uang tunai dan lampirkan foto serah terima</p>
+          </div>
+        </div>
+
+        <form id="disburseForm" onsubmit="event.preventDefault(); submitDisburseAndPrint();">
+          <input type="hidden" id="disburseSubId">
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-user-check"></i> Siapa yang Menerima Uang Fisik? <span class="req">*</span></label>
+            <select id="disburseReceiverType" required onchange="handleReceiverTypeChange()">
+              <option value="PKA">1. Pelaksana Kegiatan (PKA yang bersangkutan)</option>
+              <option value="KADES">2. Kepala Desa (Kades membawa uang langsung)</option>
+              <option value="CUSTOM">3. Pihak Lain / Tim Pelaksana Kegiatan (TPK)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-signature"></i> Nama Penerima Uang Fisik:</label>
+            <input type="text" id="disburseReceiverName" required>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-briefcase"></i> Jabatan Penerima:</label>
+            <input type="text" id="disburseReceiverRole" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label><i class="fa-solid fa-calendar-day"></i> Tanggal Penyerahan:</label>
+              <input type="date" id="disburseDate" required>
+            </div>
+            <div class="form-group flex-1">
+              <label><i class="fa-solid fa-money-bill-wave"></i> Jumlah Uang Diserahkan (Rp):</label>
+              <input type="number" id="disburseAmount" required>
+            </div>
+          </div>
+
+          <!-- FITUR PENGAMBILAN FOTO DOKUMENTASI (KAMERA / FILE) -->
+          <div class="photo-upload-section">
+            <label><i class="fa-solid fa-camera"></i> Foto Bukti Penyerahan Uang (Kamera / Galeri):</label>
+            <p class="section-help" style="margin-bottom: 8px;">Ambil foto penerima memegang uang atau saat menandatangani kuitansi.</p>
+            
+            <input type="file" id="disbursePhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoSelected(event)">
+            
+            <div class="photo-action-row">
+              <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('disbursePhotoInput').click()">
+                <i class="fa-solid fa-camera"></i> Ambil Foto / Pilih Gambar
+              </button>
+              <button type="button" class="btn btn-sm btn-outline text-danger" id="btnRemovePhoto" style="display:none;" onclick="removeSelectedPhoto()">
+                <i class="fa-solid fa-trash"></i> Hapus Foto
+              </button>
+            </div>
+
+            <!-- Preview Foto -->
+            <div id="photoPreviewContainer" class="photo-preview-box" style="display:none;">
+              <img id="photoPreviewImg" src="" alt="Pratinjau Foto">
+              <span class="photo-preview-tag"><i class="fa-solid fa-circle-check"></i> Foto Siap Dilampirkan</span>
+            </div>
+          </div>
+
+          <div class="form-actions space-between" style="margin-top: 18px;">
+            <button type="button" class="btn btn-secondary" onclick="closeDisburseSetupModal()">Batal</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-receipt"></i> Simpan & Cetak Kuitansi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LIHAT FOTO BUKTI (ENLARGED) -->
+  <div id="viewPhotoModal" class="print-modal-backdrop no-print">
+    <div class="print-modal-container" style="max-width: 600px; margin-top: 40px;">
+      <div class="card" style="padding: 14px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="font-size: 1rem;"><i class="fa-solid fa-image"></i> Foto Bukti Penyerahan Kas</h3>
+          <button class="btn btn-sm btn-outline" onclick="closeViewPhotoModal()"><i class="fa-solid fa-xmark"></i> Tutup</button>
+        </div>
+        <img id="enlargedPhotoImg" src="" alt="Foto Bukti" style="max-width: 100%; max-height: 70vh; border-radius: 8px; border: 1px solid #ccc; object-fit: contain;">
+        <p id="enlargedPhotoCaption" style="font-size: 0.85rem; color: #4b5563; margin-top: 8px; font-weight: 600;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">Notifikasi</div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
