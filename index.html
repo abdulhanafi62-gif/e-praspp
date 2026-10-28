@@ -490,8 +490,8 @@
           <i class="fa-solid fa-arrow-left"></i> Kembali
         </button>
         <div class="actions-right">
-          <button class="btn btn-success btn-sm" onclick="shareToWhatsApp()">
-            <i class="fa-brands fa-whatsapp"></i> Bagikan Info ke WA
+          <button class="btn btn-success btn-sm" onclick="shareToWhatsApp()" title="Bagikan file dokumen PDF ke WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i> Bagikan PDF ke WA
           </button>
           <button class="btn btn-primary btn-sm" onclick="printClean('printModal')">
             <i class="fa-solid fa-print"></i> Cetak Daftar Usulan (PDF)
@@ -648,6 +648,9 @@
           <i class="fa-solid fa-arrow-left"></i> Kembali
         </button>
         <div class="actions-right">
+          <button class="btn btn-success btn-sm" onclick="shareReceiptToWhatsApp()" title="Bagikan file dokumen kuitansi PDF ke WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i> Bagikan PDF ke WA
+          </button>
           <button class="btn btn-warning btn-sm" onclick="editReceiptCurrent()" title="Edit data penerima / nominal / foto kuitansi">
             <i class="fa-solid fa-pen-to-square"></i> Edit Kuitansi
           </button>
@@ -915,6 +918,10 @@
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">Notifikasi</div>
+
+  <!-- PDF Engine for direct WhatsApp sharing & download -->
+  <script src="html2pdf.bundle.min.js"></script>
+  <script>if (typeof html2pdf === 'undefined') { document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\\/script>'); }</script>
 
   <!-- Scripts -->
   <script src="app.js"></script>

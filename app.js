@@ -807,32 +807,137 @@ function closeViewPhotoModal() {
   if (modal) modal.classList.remove('open');
 }
 
-// Share text info via WhatsApp
-function shareToWhatsApp() {
+// ============================================================================
+// BAGIKAN FILE DOKUMEN PDF RESMI LANGSUNG KE WHATSAPP (HP & LAPTOP)
+// ============================================================================
+async function shareToWhatsApp() {
   if (!currentPreviewSubmission) return;
   const s = currentPreviewSubmission;
-  
-  let listText = '';
-  s.activities.forEach((act, i) => {
-    listText += `${i + 1}. ${act.name}: ${formatRupiah(act.amount)}\n`;
-  });
+  const element = document.getElementById('officialLetterSheet');
+  if (!element) return;
 
-  const message = 
-`*PEMBERITAHUAN PENGAJUAN KEGIATAN DESA ${activeSettings.village.toUpperCase()}*
+  const cleanRegNo = (s.regNo || '001').replace(/[^a-zA-Z0-9]/g, '_');
+  const cleanRole = (s.pkaRole || 'PKA').replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = `Surat_PraSPP_${cleanRegNo}_${cleanRole}.pdf`;
+
+  showToast('Memproses file PDF surat pengajuan...');
+
+  const opt = {
+    margin: [10, 15, 10, 18],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  const shareText = 
+`*SURAT PENGAJUAN PRA-SPP DESA ${activeSettings.village.toUpperCase()}*
 ------------------------------------------------
 *No. Berkas:* ${s.regNo}
 *Pelaksana (PKA):* ${s.pkaRole} (${s.pkaName})
 *Tahapan / Sumber:* ${s.fundStage}
 *Tanggal Pengajuan:* ${formatIndonesianDate(s.date)}
-
-*Daftar Kegiatan yang Akan Dilaksanakan:*
-${listText}
-*TOTAL PENGAJUAN DANA:* ${formatRupiah(s.total)}
+*TOTAL DANA DIAJUKAN:* ${formatRupiah(s.total)}
 *Terbilang:* ${terbilang(s.total)} Rupiah
 
-_Catatan:_ Surat Pengajuan Pra-SPP sudah dicetak. Pelaksana menyatakan bertanggung jawab menyelesaikan SPJ atas dana yang diserahterimakan. Mohon Sekdes dan Kades menandatangani untuk diserahkan ke Operator Siskeudes.`;
+_Catatan:_ Terlampir dokumen resmi Surat Pengajuan Pra-SPP Desa Tanjung Manis. Pelaksana bertanggung jawab atas pelaksanaan teknis kegiatan dan penyelesaian SPJ diselesaikan berdasarkan bukti transaksi riil atas belanja yang disetujui Kepala Desa selaku PKPKD.`;
 
-  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+  try {
+    if (typeof html2pdf !== 'undefined') {
+      // 1. Render element menjadi file blob PDF
+      const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      // 2. Jika di HP Android / browser yang mendukung fitur Web Share File (Direct Attach to WA)
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        await navigator.share({
+          files: [pdfFile],
+          title: `Surat Pra-SPP ${s.regNo}`,
+          text: shareText
+        });
+        showToast('Berhasil membagikan file PDF ke WhatsApp!');
+        return;
+      }
+
+      // 3. Jika di browser laptop yang belum mendukung Web Share File:
+      // Otomatis download file PDF ke laptop agar bisa langsung dilampirkan
+      await html2pdf().from(element).set(opt).save();
+      showToast('File PDF berhasil diunduh ke laptop!');
+
+      setTimeout(() => {
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n*File PDF resmi telah diunduh di laptop Anda dengan nama:* ' + filename)}`;
+        window.open(waUrl, '_blank');
+      }, 700);
+      return;
+    }
+  } catch (err) {
+    console.warn('Share file PDF exception:', err);
+  }
+
+  // Fallback teks jika library belum siap
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+  window.open(waUrl, '_blank');
+}
+
+async function shareReceiptToWhatsApp() {
+  const element = document.getElementById('officialReceiptSheet');
+  if (!element || !activeDisburseItem) return;
+  const s = activeDisburseItem;
+
+  const rcpNo = (s.receiptNo || 'KW-001').replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = `Kuitansi_Kas_${rcpNo}.pdf`;
+
+  showToast('Memproses file PDF kuitansi kas...');
+
+  const opt = {
+    margin: [10, 15, 10, 18],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  const shareText = 
+`*KUITANSI SERAH TERIMA UANG KAS DESA ${activeSettings.village.toUpperCase()}*
+------------------------------------------------
+*No. Kuitansi:* ${s.receiptNo || '-'}
+*Telah Diterima Dari:* Kaur Keuangan (${activeSettings.kaurKeuanganName})
+*Diserahkan Kepada:* ${s.disbursedTo || '-'}
+*Nominal Kas:* ${formatRupiah(s.total)}
+*Terbilang:* ${terbilang(s.total)} Rupiah
+*Tanggal Penyerahan:* ${formatIndonesianDate(s.disbursedDate)}
+
+_Catatan:_ Fisik uang kas desa telah diserahterimakan secara riil dan penuh. Terlampir file dokumen PDF resmi kuitansi beserta bukti serah terima kas.`;
+
+  try {
+    if (typeof html2pdf !== 'undefined') {
+      const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+      const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        await navigator.share({
+          files: [pdfFile],
+          title: `Kuitansi Kas ${s.receiptNo}`,
+          text: shareText
+        });
+        showToast('Berhasil membagikan kuitansi PDF ke WhatsApp!');
+        return;
+      }
+
+      await html2pdf().from(element).set(opt).save();
+      showToast('Kuitansi PDF berhasil diunduh ke laptop!');
+
+      setTimeout(() => {
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n*File Kuitansi PDF telah diunduh di laptop Anda dengan nama:* ' + filename)}`;
+        window.open(waUrl, '_blank');
+      }, 700);
+      return;
+    }
+  } catch (err) {
+    console.warn('Share receipt PDF exception:', err);
+  }
+
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
   window.open(waUrl, '_blank');
 }
 

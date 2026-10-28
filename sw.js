@@ -1,9 +1,10 @@
-const CACHE_NAME = 'epraspp-tm-v1';
+const CACHE_NAME = 'epraspp-tm-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './html2pdf.bundle.min.js',
   './logo-kutim.png',
   './manifest.json'
 ];
