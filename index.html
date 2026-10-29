@@ -13,7 +13,7 @@
   
   <!-- PWA Settings -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#065f46">
+  <meta name="theme-color" content="#064e3b">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -76,9 +76,12 @@
     <div class="sidebar-header">
       <div class="sidebar-brand">
         <img src="logo-kutim.png" alt="Logo Kutai Timur" class="sidebar-logo" onerror="this.style.display='none'">
-        <div>
-          <h3>E-PraSPP</h3>
-          <p id="sidebarVillageText">Desa Tanjung Manis</p>
+        <div class="sidebar-brand-text">
+          <div class="brand-title-wrap">
+            <h3>E-PraSPP</h3>
+            <span class="brand-badge-gold">v2.5</span>
+          </div>
+          <p id="sidebarVillageText">Desa Tanjung Manis &bull; Sangkulirang</p>
         </div>
       </div>
       <button class="sidebar-close-btn" onclick="closeSidebarMenu()" aria-label="Tutup Menu">
@@ -158,6 +161,23 @@
   <!-- Main Container -->
   <main class="main-content no-print">
     
+    <!-- BANNER HERO SELAMAT DATANG (EMERALD ROYALE & GOLD) -->
+    <div class="app-hero-banner no-print">
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fa-solid fa-crown text-gold"></i> Tahun Anggaran 2026 &bull; Desa Tanjung Manis</div>
+        <h2 class="hero-title">Sistem Kendali Pra-SPP & Pencairan Kas Desa</h2>
+        <p class="hero-desc">Permudah verifikasi belanja kegiatan APBDes per PKA, pencairan dana kas, dan penertiban kuitansi resmi.</p>
+      </div>
+      <div class="hero-quick-actions">
+        <button class="hero-btn active" onclick="switchView('view-form', this)">
+          <i class="fa-solid fa-file-pen"></i> Ajukan Kegiatan
+        </button>
+        <button class="hero-btn hero-btn-gold" onclick="switchView('view-rekap', this)">
+          <i class="fa-solid fa-building-columns"></i> Menu Kaur Keuangan
+        </button>
+      </div>
+    </div>
+
     <!-- Tab 1: Form Pengajuan Khusus Per-PKA -->
     <section id="view-form" class="app-view active">
       <div class="card form-card">
@@ -310,20 +330,20 @@
           </div>
         </div>
 
-        <!-- Metric Badges -->
+        <!-- Metric Badges (Emerald Royale & Champagne Gold) -->
         <div class="metric-grid">
-          <div class="metric-card">
-            <span class="metric-title">Total Seluruh Pengajuan</span>
+          <div class="metric-card metric-card-total">
+            <span class="metric-title"><i class="fa-solid fa-file-invoice text-primary"></i> Total Seluruh Pengajuan</span>
             <span class="metric-val" id="metricTotalSubmitted">Rp 0</span>
             <span class="metric-sub" id="metricCountSubmitted">0 Berkas Pengajuan</span>
           </div>
-          <div class="metric-card bg-highlight">
-            <span class="metric-title">Siap Ditarik di Bank (Sudah SPP)</span>
+          <div class="metric-card metric-card-ready">
+            <span class="metric-title"><i class="fa-solid fa-clock-rotate-left text-gold"></i> Siap Ditarik di Bank (Sudah SPP)</span>
             <span class="metric-val text-success" id="metricTotalReady">Rp 0</span>
             <span class="metric-sub" id="metricCountReady">0 Kegiatan</span>
           </div>
-          <div class="metric-card">
-            <span class="metric-title">Sudah Diserahterimakan (Ada Kuitansi)</span>
+          <div class="metric-card metric-card-disbursed">
+            <span class="metric-title"><i class="fa-solid fa-circle-check text-blue"></i> Sudah Disalurkan (Ada Kuitansi)</span>
             <span class="metric-val text-muted" id="metricTotalDisbursed">Rp 0</span>
             <span class="metric-sub" id="metricCountDisbursed">0 Berkas Selesai</span>
           </div>
