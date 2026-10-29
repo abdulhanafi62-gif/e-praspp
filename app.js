@@ -140,10 +140,13 @@ function initCloudSync() {
         saveSubmissionsToLocalOnly();
         renderAllViews();
         updateCloudStatus(true, 'Cloud Terhubung');
-      } else if (submissions && submissions.length > 0) {
-        // Jika di cloud masih kosong tapi di lokal sudah ada data, unggah data awal ke cloud
-        syncToCloud(submissions);
-        updateCloudStatus(true, 'Cloud Terhubung');
+      } else {
+        // Ketika di cloud kosong (misal arsip pengajuan telah dihapus)
+        // Sinkronkan lokal menjadi kosong, JANGAN mengunggah ulang data yang sudah dihapus!
+        submissions = [];
+        saveSubmissionsToLocalOnly();
+        renderAllViews();
+        updateCloudStatus(true, 'Cloud Terhubung (0 Berkas)');
       }
     }, (error) => {
       console.warn('Firebase notice:', error.message);
@@ -191,6 +194,10 @@ function syncToCloud(dataList) {
   if (firebaseDb) {
     try {
       const ref = firebaseDb.ref('tanjung_manis/submissions_v5');
+      if (!dataList || dataList.length === 0) {
+        ref.remove().catch(e => console.warn('Cloud remove deferred:', e));
+        return;
+      }
       const payload = {};
       dataList.forEach(item => {
         payload[item.id] = item;
@@ -1104,10 +1111,29 @@ function openReceiptPrintModalById(id) {
 }
 
 function deleteSubmission(id) {
-  if (confirm('Apakah Anda yakin ingin menghapus arsip pengajuan ini?')) {
-    submissions = submissions.filter(s => s.id !== id);
-    syncToCloud(submissions);
-    renderAllViews();
+  if (!confirm('Apakah Anda yakin ingin menghapus arsip pengajuan ini?')) return;
+
+  // 1. Hapus dari array memori lokal & simpan
+  submissions = submissions.filter(s => s.id !== id);
+  saveSubmissionsToLocalOnly();
+  renderAllViews();
+
+  // 2. Hapus langsung node item spesifik di Firebase Cloud
+  if (firebaseDb) {
+    try {
+      firebaseDb.ref('tanjung_manis/submissions_v5').child(id).remove()
+        .then(() => {
+          showToast('Pengajuan berhasil dihapus dari cloud & arsip!');
+        })
+        .catch(err => {
+          console.warn('Gagal menghapus dari cloud:', err);
+          showToast('Pengajuan dihapus dari lokal.');
+        });
+    } catch (e) {
+      console.warn('Cloud delete exception:', e);
+      showToast('Pengajuan dihapus dari lokal.');
+    }
+  } else {
     showToast('Pengajuan berhasil dihapus!');
   }
 }
