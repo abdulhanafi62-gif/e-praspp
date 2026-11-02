@@ -50,7 +50,10 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="style.css?v=8.1">
+  <link rel="stylesheet" href="style.css?v=11.0">
+
+
+
 
 </head>
 
@@ -60,307 +63,412 @@
 
   <!-- Top App Bar (Mobile & Desktop Header) -->
 
-  <header class="app-header no-print">
+  <!-- Top App Bar (Sistem Navigasi Bersih Ala SIJAGSA Kecamatan Sangkulirang) -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop no-print" onclick="toggleSidebarMenu()"></div>
 
-    <div class="header-container">
-
-      <div class="brand">
-
-        <!-- TOMBOL MENU HAMBURGER (SAMPING KIRI) -->
-
-        <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleSidebarMenu()" aria-label="Buka Menu Samping" title="Buka Menu">
-
-          <i class="fa-solid fa-bars"></i>
-
-        </button>
-
-        <img src="logo-kutim.png" alt="Logo Kutai Timur" class="header-logo" onerror="this.style.display='none'">
-
-        <div class="brand-text">
-
-          <h1 id="headerVillageTitle">E-PraSPP</h1>
-
-          <p id="headerVillageSubtitle">Desa Tanjung Manis • Sangkulirang</p>
-
+  <!-- FINTRACK 3D CLAYMORPHISM APP SHELL -->
+  <div class="fintrack-shell">
+    <!-- LEFT FLOATING SIDEBAR -->
+    <aside class="fintrack-sidebar no-print" id="fintrackSidebar">
+      <div>
+        <div class="fintrack-brand">
+          <img src="logo-kutim.png" alt="Logo Kutai Timur" class="brand-kutim-logo" onerror="this.style.display='none'">
+          <div class="brand-clay-text">
+            <span class="brand-title">E-PraSPP</span>
+            <span class="brand-sub">Desa Tanjung Manis</span>
+          </div>
+          <button class="sidebar-mobile-close no-print" onclick="toggleSidebarMenu()" aria-label="Tutup Menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
+        <!-- Vertical Navigation Menu -->
+        <nav class="fintrack-nav">
+          <button class="fintrack-nav-btn active" onclick="switchView('view-dashboard', this)">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+          </button>
+          <button class="fintrack-nav-btn" onclick="switchView('view-form', this)">
+            <i class="fa-regular fa-paper-plane"></i>
+            <span>Ajukan PKA</span>
+          </button>
+          <button class="fintrack-nav-btn" onclick="switchView('view-list', this)">
+            <i class="fa-regular fa-folder-open"></i>
+            <span>Riwayat Berkas</span>
+          </button>
+          <button class="fintrack-nav-btn" onclick="switchView('view-rekap', this)">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Anggaran Kas</span>
+          </button>
+          <button class="fintrack-nav-btn" onclick="switchView('view-settings', this)">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>Profil Desa</span>
+          </button>
+        </nav>
       </div>
 
-
-
-      <!-- DESKTOP / LAPTOP NAVIGATION MENU -->
-
-      <nav class="desktop-nav-menu no-print">
-
-        <button class="d-nav-btn active" onclick="switchView('view-form', this)">
-
-          <i class="fa-solid fa-file-pen"></i> <span>Ajukan Kegiatan</span>
-
+      <!-- Bottom Card Widget (FinTrack Promo Box) -->
+      <div class="fintrack-sidebar-card">
+        <div class="card-piggy-badge">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h4>Tertib APBDes!</h4>
+        <p>Arsipkan kuitansi & nota riil untuk transparansi SPJ desa.</p>
+        <button class="btn-sidebar-action" onclick="switchView('view-rekap')">
+          Kelola Kas &rarr;
         </button>
-
-        <button class="d-nav-btn" onclick="switchView('view-list', this)">
-
-          <i class="fa-solid fa-folder-open"></i> <span>Riwayat Pengajuan</span>
-
-        </button>
-
-        <button class="d-nav-btn btn-highlight-kaur" onclick="switchView('view-rekap', this)">
-
-          <i class="fa-solid fa-building-columns"></i> <span>Menu Kaur Keuangan</span>
-
-        </button>
-
-        <button class="d-nav-btn" onclick="switchView('view-settings', this)">
-
-          <i class="fa-solid fa-id-card"></i> <span>Profil Desa</span>
-
-        </button>
-
-      </nav>
-
-
-
-      <div class="header-actions">
-
-        <span class="cloud-status-badge" id="cloudStatusBadge" title="Status Sinkronisasi Cloud">
-
-          <i class="fa-solid fa-cloud"></i> <span id="cloudStatusText">Online Cloud</span>
-
-        </span>
-
       </div>
+    </aside>
 
-    </div>
-
-  </header>
-
-
-
-  <!-- ============================================================ -->
-
-  <!-- SIDEBAR DRAWER MENU SAMPING KIRI (RESPONSIF HP & LAPTOP)     -->
-
-  <!-- ============================================================ -->
-
-  <div id="sidebarBackdrop" class="sidebar-backdrop no-print" onclick="closeSidebarMenu()"></div>
-
-
-
-  <aside id="sidebarDrawer" class="sidebar-drawer no-print">
-
-    <div class="sidebar-header">
-
-      <div class="sidebar-brand">
-
-        <img src="logo-kutim.png" alt="Logo Kutai Timur" class="sidebar-logo" onerror="this.style.display='none'">
-
-        <div class="sidebar-brand-text">
-
-          <div class="brand-title-wrap">
-
-            <h3>E-PraSPP</h3>
-
-            <span class="brand-badge-gold">v2.5</span>
-
+    <!-- RIGHT MAIN CONTENT AREA -->
+    <div class="fintrack-main-area">
+      <!-- TOPBAR HEADER -->
+      <header class="fintrack-topbar no-print">
+        <div class="topbar-left">
+          <button class="topbar-toggle-btn" id="menuToggleBtn" onclick="toggleSidebarMenu()" aria-label="Buka Menu Samping" title="Buka Menu">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
+          <div class="topbar-greeting">
+            <h2 id="topbarGreeting">Selamat Malam, Pemdes TJ. Manis 👋</h2>
+            <p id="topbarSub">Pantau pengajuan kegiatan & arus kas APBDes hari ini.</p>
           </div>
-
-          <p id="sidebarVillageText">Desa Tanjung Manis &bull; Sangkulirang</p>
-
         </div>
 
-      </div>
-
-      <button class="sidebar-close-btn" onclick="closeSidebarMenu()" aria-label="Tutup Menu">
-
-        <i class="fa-solid fa-xmark"></i>
-
-      </button>
-
-    </div>
-
-
-
-    <div class="sidebar-body">
-
-      <div class="sidebar-section-title">MENU UTAMA</div>
-
-
-
-      <nav class="sidebar-menu-list">
-
-        <!-- Menu 1: Ajukan -->
-
-        <button class="sidebar-nav-item active" onclick="navigateFromSidebar('view-form', this)">
-
-          <div class="sidebar-nav-icon bg-emerald-tint">
-
-            <i class="fa-solid fa-file-pen text-primary"></i>
-
+        <div class="topbar-right">
+          <!-- Search Pill -->
+          <div class="topbar-search-pill">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="topbarSearchInput" placeholder="Cari kegiatan / nomor surat..." onkeyup="filterSubmissionsQuick(this.value)">
           </div>
 
-          <div class="sidebar-nav-info">
-
-            <span class="sidebar-nav-title">Ajukan Kegiatan</span>
-
-            <span class="sidebar-nav-desc">Input pagu anggaran per PKA</span>
-
-          </div>
-
-          <i class="fa-solid fa-chevron-right sidebar-nav-arrow"></i>
-
-        </button>
-
-
-
-        <!-- Menu 2: Riwayat -->
-
-        <button class="sidebar-nav-item" onclick="navigateFromSidebar('view-list', this)">
-
-          <div class="sidebar-nav-icon bg-blue-tint">
-
-            <i class="fa-solid fa-folder-open text-blue"></i>
-
-          </div>
-
-          <div class="sidebar-nav-info">
-
-            <span class="sidebar-nav-title">Riwayat Pengajuan</span>
-
-            <span class="sidebar-nav-desc">Arsip online berkas semua PKA</span>
-
-          </div>
-
-          <i class="fa-solid fa-chevron-right sidebar-nav-arrow"></i>
-
-        </button>
-
-
-
-        <!-- Menu 3: Kaur Keuangan (Khusus) -->
-
-        <button class="sidebar-nav-item sidebar-highlight-kaur" onclick="navigateFromSidebar('view-rekap', this)">
-
-          <div class="sidebar-nav-icon bg-gold-tint">
-
-            <i class="fa-solid fa-building-columns text-gold"></i>
-
-          </div>
-
-          <div class="sidebar-nav-info">
-
-            <span class="sidebar-nav-title">Menu Kaur Keuangan</span>
-
-            <span class="sidebar-nav-desc">Kas bank, kuitansi, & foto bukti</span>
-
-          </div>
-
-          <span class="badge-bendahara">Bendahara</span>
-
-        </button>
-
-
-
-        <!-- Menu 4: Profil Desa -->
-
-        <button class="sidebar-nav-item" onclick="navigateFromSidebar('view-settings', this)">
-
-          <div class="sidebar-nav-icon bg-purple-tint">
-
-            <i class="fa-solid fa-id-card text-purple"></i>
-
-          </div>
-
-          <div class="sidebar-nav-info">
-
-            <span class="sidebar-nav-title">Profil Desa & Pejabat</span>
-
-            <span class="sidebar-nav-desc">Kades, Sekdes, PKA & Database</span>
-
-          </div>
-
-          <i class="fa-solid fa-chevron-right sidebar-nav-arrow"></i>
-
-        </button>
-
-      </nav>
-
-
-
-      <!-- Quick Status Box -->
-
-      <div class="sidebar-status-box">
-
-        <div class="status-indicator-dot"></div>
-
-        <div>
-
-          <strong>Database Terhubung</strong>
-
-          <p id="sidebarDbHost">Google Firebase Realtime Sync</p>
-
+          <!-- Notification Bell & Cloud Status -->
+          <button class="topbar-circle-btn" onclick="switchView('view-list')" title="Notifikasi Berkas & Realtime Database Sync">
+            <i class="fa-regular fa-bell"></i>
+            <span class="bell-badge-dot"></span>
+            <span class="cloud-indicator-dot" id="cloudStatusBadge" title="Status Realtime Database Cloud: Online"></span>
+          </button>
         </div>
+      </header>
 
-      </div>
+      <!-- MAIN CONTAINER -->
+      <main class="main-content no-print">
+        <!-- ============================================================ -->
+        <!-- VIEW DASHBOARD (FINTRACK 3D CLAYMORPHISM AESTHETIC)          -->
+        <!-- ============================================================ -->
+        <section id="view-dashboard" class="app-view active">
+          <!-- 4 METRIC CARDS ROW -->
+          <div class="clay-metrics-grid">
+            <!-- Card 1: Total Pagu Diajukan (Purple Clay Wallet) -->
+            <div class="clay-card metric-card" onclick="switchView('view-list')" title="Klik untuk lihat semua pengajuan">
+              <div class="metric-top-row">
+                <span class="metric-label">Total Pagu Diajukan</span>
+                <span class="metric-dots">&#8942;</span>
+              </div>
+              <div class="metric-middle-row">
+                <div class="metric-value-wrap">
+                  <span class="metric-amount" id="dashTotalPagu">Rp 25.000.000</span>
+                  <div class="metric-trend-pill trend-up">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <span id="dashPaguCount">2 Berkas</span>
+                  </div>
+                </div>
+                <div class="metric-3d-icon">
+                  <!-- SVG 3D Clay Purple Wallet -->
+                  <svg class="clay-3d-graphic" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <radialGradient id="clayPurp" cx="35%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#b49aff"/>
+                        <stop offset="50%" stop-color="#7c3aed"/>
+                        <stop offset="100%" stop-color="#4c1d95"/>
+                      </radialGradient>
+                      <radialGradient id="clayGold" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#fef08a"/>
+                        <stop offset="55%" stop-color="#eab308"/>
+                        <stop offset="100%" stop-color="#854d0e"/>
+                      </radialGradient>
+                      <filter id="clayShadowP" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#4c1d95" flood-opacity="0.28"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#clayShadowP)">
+                      <circle cx="72" cy="32" r="14" fill="url(#clayGold)"/>
+                      <circle cx="72" cy="32" r="10" stroke="#ca8a04" stroke-width="2" fill="none" opacity="0.6"/>
+                      <rect x="10" y="26" width="80" height="58" rx="18" fill="url(#clayPurp)"/>
+                      <path d="M20 34 C35 29, 65 29, 80 34" stroke="#c4b5fd" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+                      <path d="M10 46 C24 56, 76 56, 90 46 L90 68 C90 76, 82 84, 72 84 L28 84 C18 84, 10 76, 10 68 Z" fill="#6d28d9"/>
+                      <circle cx="72" cy="54" r="7.5" fill="url(#clayGold)"/>
+                      <circle cx="72" cy="54" r="2.5" fill="#713f12"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-    </div>
+            <!-- Card 2: Pagu Siap Cair / Disetujui (Green Clay Money Bag) -->
+            <div class="clay-card metric-card" onclick="switchView('view-list')" title="Klik untuk lihat berkas SPP terbit">
+              <div class="metric-top-row">
+                <span class="metric-label">Pagu Siap Cair (SPP)</span>
+                <span class="metric-dots">&#8942;</span>
+              </div>
+              <div class="metric-middle-row">
+                <div class="metric-value-wrap">
+                  <span class="metric-amount" id="dashPaguDisetujui">Rp 15.000.000</span>
+                  <div class="metric-trend-pill trend-success">
+                    <i class="fa-solid fa-check"></i>
+                    <span id="dashPaguDisetujuiCount">1 Terbit SPP</span>
+                  </div>
+                </div>
+                <div class="metric-3d-icon">
+                  <!-- SVG 3D Clay Green Money Bag -->
+                  <svg class="clay-3d-graphic" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <radialGradient id="clayGreen" cx="35%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#6ee7b7"/>
+                        <stop offset="45%" stop-color="#10b981"/>
+                        <stop offset="100%" stop-color="#047857"/>
+                      </radialGradient>
+                      <radialGradient id="clayGoldBag" cx="30%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#fef08a"/>
+                        <stop offset="50%" stop-color="#f59e0b"/>
+                        <stop offset="100%" stop-color="#b45309"/>
+                      </radialGradient>
+                      <filter id="clayShadowG" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#065f46" flood-opacity="0.28"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#clayShadowG)">
+                      <path d="M36 28 C32 20, 42 16, 50 19 C58 16, 68 20, 64 28 Z" fill="url(#clayGreen)"/>
+                      <rect x="36" y="26" width="28" height="6" rx="3" fill="url(#clayGoldBag)"/>
+                      <path d="M36 30 C20 38, 14 55, 18 70 C21 82, 34 88, 50 88 C66 88, 79 82, 82 70 C86 55, 80 38, 64 30 Z" fill="url(#clayGreen)"/>
+                      <ellipse cx="36" cy="46" rx="10" ry="6" transform="rotate(-30 36 46)" fill="#ffffff" opacity="0.35"/>
+                      <circle cx="50" cy="62" r="13" fill="url(#clayGoldBag)" opacity="0.95"/>
+                      <text x="50" y="67" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="11" fill="#78350f">Rp</text>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
+            <!-- Card 3: Kas Diserahkan (Coral Clay Shopping Bag / Receipt) -->
+            <div class="clay-card metric-card" onclick="switchView('view-rekap')" title="Klik untuk lihat kuitansi & kas diserahkan">
+              <div class="metric-top-row">
+                <span class="metric-label">Kas Diserahkan (Kuitansi)</span>
+                <span class="metric-dots">&#8942;</span>
+              </div>
+              <div class="metric-middle-row">
+                <div class="metric-value-wrap">
+                  <span class="metric-amount" id="dashKasDiserahkan">Rp 10.000.000</span>
+                  <div class="metric-trend-pill trend-rose">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span id="dashKasDiserahkanCount">Kuitansi Riil</span>
+                  </div>
+                </div>
+                <div class="metric-3d-icon">
+                  <!-- SVG 3D Clay Coral Shopping Bag / Receipt -->
+                  <svg class="clay-3d-graphic" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <radialGradient id="clayCoral" cx="35%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#fda4af"/>
+                        <stop offset="45%" stop-color="#f43f5e"/>
+                        <stop offset="100%" stop-color="#be123c"/>
+                      </radialGradient>
+                      <filter id="clayShadowC" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#881337" flood-opacity="0.25"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#clayShadowC)">
+                      <path d="M36 34 C36 18, 64 18, 64 34" stroke="#fda4af" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+                      <rect x="20" y="32" width="60" height="54" rx="15" fill="url(#clayCoral)"/>
+                      <path d="M28 38 C40 35, 60 35, 72 38" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+                      <rect x="36" y="42" width="28" height="25" rx="5" fill="#ffffff" opacity="0.9"/>
+                      <line x1="41" y1="48" x2="59" y2="48" stroke="#fb7185" stroke-width="2" stroke-linecap="round"/>
+                      <line x1="41" y1="54" x2="54" y2="54" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+                      <line x1="41" y1="60" x2="57" y2="60" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
+            <!-- Card 4: Sisa Kas / Perlu Revisi (Gold Clay Coins Stack) -->
+            <div class="clay-card metric-card" onclick="switchView('view-list')" title="Lihat status berkas revisi / catatan kades">
+              <div class="metric-top-row">
+                <span class="metric-label">Perlu Revisi / Menunggu</span>
+                <span class="metric-dots">&#8942;</span>
+              </div>
+              <div class="metric-middle-row">
+                <div class="metric-value-wrap">
+                  <span class="metric-amount" id="dashStatRevisedVal">0 Berkas</span>
+                  <div class="metric-trend-pill trend-gold">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span id="dashStatRevised">Tahun 2026</span>
+                  </div>
+                </div>
+                <div class="metric-3d-icon">
+                  <!-- SVG 3D Clay Gold Coins Stack -->
+                  <svg class="clay-3d-graphic" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <radialGradient id="clayCoinG" cx="35%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#fef08a"/>
+                        <stop offset="50%" stop-color="#eab308"/>
+                        <stop offset="100%" stop-color="#a16207"/>
+                      </radialGradient>
+                      <linearGradient id="clayCoinRim" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#ca8a04"/>
+                        <stop offset="100%" stop-color="#854d0e"/>
+                      </linearGradient>
+                      <filter id="clayShadowGold" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#713f12" flood-opacity="0.25"/>
+                      </filter>
+                    </defs>
+                    <g filter="url(#clayShadowGold)">
+                      <!-- Bottom Coin -->
+                      <path d="M22 66 C22 59, 78 59, 78 66 L78 74 C78 81, 22 81, 22 74 Z" fill="url(#clayCoinRim)"/>
+                      <ellipse cx="50" cy="66" rx="28" ry="9" fill="url(#clayCoinG)"/>
+                      <!-- Middle Coin -->
+                      <path d="M22 53 C22 46, 78 46, 78 53 L78 61 C78 68, 22 68, 22 61 Z" fill="url(#clayCoinRim)"/>
+                      <ellipse cx="50" cy="53" rx="28" ry="9" fill="url(#clayCoinG)"/>
+                      <!-- Top Coin -->
+                      <path d="M22 40 C22 33, 78 33, 78 40 L78 48 C78 55, 22 55, 22 48 Z" fill="url(#clayCoinRim)"/>
+                      <ellipse cx="50" cy="40" rx="28" ry="9" fill="url(#clayCoinG)"/>
+                      <ellipse cx="50" cy="40" rx="21" ry="6.5" stroke="#fef08a" stroke-width="1.5" fill="none" opacity="0.6"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <div class="sidebar-footer">
+          <!-- MIDDLE SECTION (2 COLUMNS: SPENDING OVERVIEW DONUT & RECENT SUBMISSIONS) -->
+          <div class="clay-middle-grid">
+            <!-- Left Card: Spending Overview (Alokasi Pagu per Bidang) -->
+            <div class="clay-card spending-card">
+              <div class="clay-card-header">
+                <div>
+                  <h3 class="card-title">Alokasi Pagu per Bidang</h3>
+                  <p class="card-sub">Distribusi rencana anggaran belanja APBDes</p>
+                </div>
+                <div class="header-pill-select">
+                  <select id="dashYearSelect" class="clay-select-pill" onchange="renderDashboard()">
+                    <option value="2026" selected>Tahun 2026</option>
+                    <option value="2025">Tahun 2025</option>
+                  </select>
+                </div>
+              </div>
 
-      <p class="sidebar-meta-text"><strong>Pemerintah Desa Tanjung Manis</strong></p>
+              <div class="donut-content-layout">
+                <!-- SVG Donut Chart with 3D styling -->
+                <div class="donut-chart-box">
+                  <svg id="dashDonutSvg" viewBox="0 0 200 200" width="170" height="170">
+                    <!-- Dynamic Donut Paths rendered by app.js -->
+                  </svg>
+                  <div class="donut-center-info">
+                    <span class="donut-center-label">Total Pagu</span>
+                    <strong class="donut-center-val" id="dashDonutCenterTotal">Rp 25 Jt</strong>
+                  </div>
+                </div>
 
-      <p class="sidebar-meta-sub">Kecamatan Sangkulirang • Kabupaten Kutai Timur</p>
+                <!-- Legend Breakdown List -->
+                <div class="donut-legend-list" id="dashBidangLegend">
+                  <!-- Injected automatically via app.js -->
+                </div>
+              </div>
+            </div>
 
-    </div>
+            <!-- Right Card: Recent Transactions (Pengajuan Kegiatan Terbaru) -->
+            <div class="clay-card recent-card">
+              <div class="clay-card-header">
+                <div>
+                  <h3 class="card-title">Pengajuan Kegiatan Terbaru</h3>
+                  <p class="card-sub">Arsip berkas Pra-SPP terbaru</p>
+                </div>
+                <button class="btn-card-link" onclick="switchView('view-list')">
+                  Lihat Semua <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
 
-  </aside>
+              <!-- List of Recent Submissions with Quick Action Button -->
+              <div class="recent-list" id="dashRecentSubmissions">
+                <!-- Injected automatically via app.js -->
+              </div>
+            </div>
+          </div>
 
+          <!-- BOTTOM SECTION (2 COLUMNS: BUDGET ABSORPTION & SMART TIP) -->
+          <div class="clay-bottom-grid">
+            <!-- Left: Goals Progress (Tahapan Penyerapan Anggaran) -->
+            <div class="clay-card goals-card">
+              <div class="clay-card-header">
+                <div>
+                  <h3 class="card-title">Tahapan Penyerapan Anggaran</h3>
+                  <p class="card-sub">Realisasi penarikan per sumber dana APBDes</p>
+                </div>
+                <button class="btn-card-link" onclick="switchView('view-rekap')">
+                  Rincian Kas <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
 
+              <div class="goals-progress-list" id="dashGoalsProgress">
+                <!-- Progress items rendered dynamically or statically -->
+                <div class="goal-progress-item">
+                  <div class="goal-top-row">
+                    <span>Alokasi Dana Desa (ADD) Tahap 1</span>
+                    <span class="goal-amounts">Rp 85.000.000 / Rp 100.000.000 (85%)</span>
+                  </div>
+                  <div class="clay-progress-track">
+                    <div class="clay-progress-fill" style="width: 85%; background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
+                  </div>
+                </div>
 
-  <!-- Main Container -->
+                <div class="goal-progress-item">
+                  <div class="goal-top-row">
+                    <span>Alokasi Dana Desa (ADD) Tahap 2</span>
+                    <span class="goal-amounts">Rp 45.000.000 / Rp 100.000.000 (45%)</span>
+                  </div>
+                  <div class="clay-progress-track">
+                    <div class="clay-progress-fill" style="width: 45%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                  </div>
+                </div>
 
-  <main class="main-content no-print">
+                <div class="goal-progress-item">
+                  <div class="goal-top-row">
+                    <span>Dana Desa (DDS) Tahap 1</span>
+                    <span class="goal-amounts">Rp 180.000.000 / Rp 200.000.000 (90%)</span>
+                  </div>
+                  <div class="clay-progress-track">
+                    <div class="clay-progress-fill" style="width: 90%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-    
-
-    <!-- BANNER HERO SELAMAT DATANG (EMERALD ROYALE & GOLD) -->
-
-    <div class="app-hero-banner no-print">
-
-      <div class="hero-content">
-
-        <div class="hero-badge"><i class="fa-solid fa-crown text-gold"></i> Tahun Anggaran 2026 &bull; Desa Tanjung Manis</div>
-
-        <h2 class="hero-title">Sistem Kendali Pra-SPP & Pencairan Kas Desa</h2>
-
-        <p class="hero-desc">Permudah verifikasi belanja kegiatan APBDes per PKA, pencairan dana kas, dan penertiban kuitansi resmi.</p>
-
-      </div>
-
-      <div class="hero-quick-actions">
-
-        <button class="hero-btn active" onclick="switchView('view-form', this)">
-
-          <i class="fa-solid fa-file-pen"></i> Ajukan Kegiatan
-
-        </button>
-
-        <button class="hero-btn hero-btn-gold" onclick="switchView('view-rekap', this)">
-
-          <i class="fa-solid fa-building-columns"></i> Menu Kaur Keuangan
-
-        </button>
-
-      </div>
-
-    </div>
-
+            <!-- Right: Smart Tip Card (FinTrack Smart Tip) -->
+            <div class="clay-card tip-clay-card">
+              <div class="tip-card-inner">
+                <div class="tip-icon-box">
+                  <svg viewBox="0 0 60 60" width="52" height="52" fill="none">
+                    <circle cx="30" cy="30" r="26" fill="#fef08a" opacity="0.45"/>
+                    <path d="M30 14 C22 14, 18 20, 18 26 C18 30, 22 34, 24 37 L36 37 C38 34, 42 30, 42 26 C42 20, 38 14, 30 14 Z" fill="#eab308"/>
+                    <rect x="25" y="39" width="10" height="4" rx="2" fill="#ca8a04"/>
+                    <rect x="27" y="44" width="6" height="3" rx="1.5" fill="#a16207"/>
+                    <path d="M25 20 C28 17, 33 17, 35 20" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="tip-text-box">
+                  <h4>Smart Tip Bendahara</h4>
+                  <p>Jika Kepala Desa melakukan penyesuaian pagu anggaran yang diajukan PKA, sistem akan mencatat riwayat revisi dan catatan kades secara transparan tanpa menghilangkan dokumen awal.</p>
+                  <button class="btn-tip-action" onclick="switchView('view-form')">
+                    <i class="fa-solid fa-plus"></i> Buat Pengajuan Baru
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
 
     <!-- Tab 1: Form Pengajuan Khusus Per-PKA -->
-
-    <section id="view-form" class="app-view active">
+    <section id="view-form" class="app-view">
 
       <div class="card form-card">
 
@@ -957,12 +1065,19 @@
 
 
   </main>
+    </div><!-- end fintrack-main-area -->
+  </div><!-- end fintrack-shell -->
+
 
 
 
   <!-- Mobile Bottom Navigation Bar (Muncul di layar HP) -->
 
   <nav class="bottom-nav no-print">
+    <button class="nav-btn active" onclick="switchView('view-dashboard', this)">
+      <i class="fa-solid fa-house"></i>
+      <span>Dashboard</span>
+    </button>
 
     <button class="nav-btn active" onclick="switchView('view-form', this)">
 
@@ -2047,4 +2162,3 @@
 </body>
 
 </html>
-

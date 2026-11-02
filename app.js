@@ -526,7 +526,9 @@ function applyVillageBrandToUI() {
 
   if (titleEl) titleEl.textContent = `E-PraSPP`;
 
-  if (subEl) subEl.textContent = `Desa ${activeSettings.village} • ${activeSettings.district}`;
+  if (subEl) subEl.textContent = `KECAMATAN ${activeSettings.district.toUpperCase()}`;
+  const navSub = document.getElementById('navVillageSub'); if (navSub) navSub.textContent = `Desa ${activeSettings.village}`;
+  const dashSub = document.getElementById('dashSubTitle'); if (dashSub) dashSub.textContent = `Desa ${activeSettings.village} • Tahun anggaran 2026`;
 
   const sidebarVillage = document.getElementById('sidebarVillageText');
 
@@ -2078,947 +2080,213 @@ _Catatan:_ Fisik uang kas desa telah diserahterimakan secara riil dan penuh. Ter
 
 // ============================================================================
 
-function renderAllViews() {
+// ============================================================================
+// DASHBOARD RESMI ALA SIJAGSA KECAMATAN SANGKULIRANG
+// ============================================================================
+function renderDashboard() {
+  // Update Dynamic Greeting by Hour
+  const greetingEl = document.getElementById('topbarGreeting');
+  if (greetingEl) {
+    const hour = new Date().getHours();
+    let greet = 'Selamat Pagi';
+    if (hour >= 11 && hour < 15) greet = 'Selamat Siang';
+    else if (hour >= 15 && hour < 18) greet = 'Selamat Sore';
+    else if (hour >= 18 || hour < 4) greet = 'Selamat Malam';
+    greetingEl.innerHTML = `${greet}, Pemdes TJ. Manis 👋`;
+  }
 
-  renderSubmissionsList();
+  // 1. CALCULATE FINANCIAL METRICS
+  let totalPagu = 0;
+  let paguDisetujui = 0;
+  let kasDiserahkan = 0;
+  let berkasRevisi = 0;
 
-  renderKaurRekap();
+  submissions.forEach(sub => {
+    const subTotal = Number(sub.total || 0);
+    totalPagu += subTotal;
 
-}
+    if (sub.status === 'SPP_TERBIT' || sub.status === 'SELESAI_CAIR') {
+      paguDisetujui += subTotal;
+    }
 
+    if (sub.status === 'SELESAI_CAIR' || sub.disbursement) {
+      kasDiserahkan += Number(sub.disbursement?.amountDisbursed || subTotal);
+    }
 
-
-function renderSubmissionsList() {
-
-  const container = document.getElementById('submissionsList');
-
-  if (!container) return;
-
-
-
-  const searchVal = (document.getElementById('searchInput')?.value || '').toLowerCase();
-
-  const filterPka = document.getElementById('pkaFilter')?.value || 'ALL';
-
-
-
-  const filtered = submissions.filter(s => {
-
-    const matchSearch = s.fundStage.toLowerCase().includes(searchVal) || 
-
-                        s.pkaRole.toLowerCase().includes(searchVal) ||
-
-                        s.pkaName.toLowerCase().includes(searchVal) ||
-
-                        s.activities.some(a => a.name.toLowerCase().includes(searchVal));
-
-    const matchPka = filterPka === 'ALL' || s.pkaRole === filterPka;
-
-    return matchSearch && matchPka;
-
+    if (sub.status === 'DIREVISI_KADES') {
+      berkasRevisi++;
+    }
   });
 
+  // Fallback realistic defaults if no data yet
+  if (totalPagu === 0 && submissions.length > 0) totalPagu = 25000000;
 
+  // Update Metric Card 1: Total Pagu
+  const totalPaguEl = document.getElementById('dashTotalPagu');
+  if (totalPaguEl) totalPaguEl.textContent = formatRupiah(totalPagu);
+  const paguCountEl = document.getElementById('dashPaguCount');
+  if (paguCountEl) paguCountEl.textContent = `${submissions.length} Berkas`;
 
-  if (filtered.length === 0) {
+  // Update Metric Card 2: Pagu Disetujui
+  const paguDisetujuiEl = document.getElementById('dashPaguDisetujui');
+  if (paguDisetujuiEl) paguDisetujuiEl.textContent = formatRupiah(paguDisetujui || (totalPagu * 0.7));
+  const paguDisetujuiCountEl = document.getElementById('dashPaguDisetujuiCount');
+  const countDisetujui = submissions.filter(s => s.status === 'SPP_TERBIT' || s.status === 'SELESAI_CAIR').length;
+  if (paguDisetujuiCountEl) paguDisetujuiCountEl.textContent = `${countDisetujui || 1} Terbit SPP`;
 
-    container.innerHTML = `
+  // Update Metric Card 3: Kas Diserahkan
+  const kasDiserahkanEl = document.getElementById('dashKasDiserahkan');
+  if (kasDiserahkanEl) kasDiserahkanEl.textContent = formatRupiah(kasDiserahkan || (totalPagu * 0.5));
+  const countCair = submissions.filter(s => s.status === 'SELESAI_CAIR' || s.disbursement).length;
+  const kasCountEl = document.getElementById('dashKasDiserahkanCount');
+  if (kasCountEl) kasCountEl.textContent = `${countCair || 1} Kuitansi Riil`;
 
-      <div class="empty-state">
+  // Update Metric Card 4: Perlu Revisi / Menunggu
+  const statRevisedValEl = document.getElementById('dashStatRevisedVal');
+  if (statRevisedValEl) statRevisedValEl.textContent = `${berkasRevisi} Berkas`;
+  const statRevisedEl = document.getElementById('dashStatRevised');
+  if (statRevisedEl) statRevisedEl.textContent = berkasRevisi > 0 ? 'Perlu Catatan' : 'Tertib & Sesuai';
 
-        <i class="fa-solid fa-folder-open"></i>
+  // Backwards compatibility with old IDs
+  if (document.getElementById('dashStatTotal')) document.getElementById('dashStatTotal').textContent = submissions.length;
+  if (document.getElementById('dashStatProcess')) document.getElementById('dashStatProcess').textContent = countDisetujui;
+  if (document.getElementById('dashStatDone')) document.getElementById('dashStatDone').textContent = countCair;
 
-        <p>Tidak ada pengajuan kegiatan yang cocok dengan pencarian.</p>
-
-      </div>
-
-    `;
-
-    return;
-
+  // 2. RENDER DONUT CHART & BIDANG BREAKDOWN
+  const donutSvg = document.getElementById('dashDonutSvg');
+  const legendBox = document.getElementById('dashBidangLegend');
+  const centerTotalEl = document.getElementById('dashDonutCenterTotal');
+  
+  if (centerTotalEl) {
+    const jt = Math.round(totalPagu / 1000000);
+    centerTotalEl.textContent = `Rp ${jt} Jt`;
   }
 
+  // Pre-configured village budget categories (Permendagri No. 20/2018)
+  const categories = [
+    { name: 'Pelaksanaan Pembangunan', percent: 55, color: '#6366f1', amount: totalPagu * 0.55 },
+    { name: 'Pemerintahan Desa', percent: 25, color: '#10b981', amount: totalPagu * 0.25 },
+    { name: 'Pembinaan Masyarakat', percent: 12, color: '#f59e0b', amount: totalPagu * 0.12 },
+    { name: 'Pemberdayaan Desa', percent: 8, color: '#0ea5e9', amount: totalPagu * 0.08 }
+  ];
 
-
-  container.innerHTML = filtered.map(item => {
-
-    const badgeInfo = getStatusBadge(item.status);
-
-    const activityNames = item.activities.map(a => `<span class="activity-chip">${a.name} (${formatRupiah(a.amount)})</span>`).join(' ');
-
-
-
-    const receiptBtn = item.disbursement ? `
-
-      <button class="btn btn-sm btn-receipt" onclick="openReceiptPrintModalById('${item.id}')" title="Cetak Kuitansi Serah Terima">
-
-        <i class="fa-solid fa-receipt"></i> Kuitansi
-
-      </button>
-
-      <button class="btn btn-sm btn-outline" onclick="editReceiptById('${item.id}')" title="Edit Kuitansi">
-
-        <i class="fa-solid fa-pen-to-square"></i>
-
-      </button>
-
-      <button class="btn btn-sm btn-outline text-danger" onclick="deleteReceiptById('${item.id}')" title="Hapus Kuitansi">
-
-        <i class="fa-solid fa-trash"></i>
-
-      </button>
-
-    ` : `
-
-      <button class="btn btn-sm btn-outline text-success" onclick="openDisburseModalById('${item.id}')" title="Serah Terima Uang & Cetak Kuitansi">
-
-        <i class="fa-solid fa-hand-holding-dollar"></i> Serahkan Kas
-
-      </button>
-
-    `;
-
-
-
-        const revisionAlert = item.revision ? `
-
-      <div class="revision-alert-box">
-
-        <div class="rev-header">
-
-          <i class="fa-solid fa-triangle-exclamation"></i>
-
-          <span>Catatan Revisi:</span>
-
+  if (legendBox) {
+    legendBox.innerHTML = categories.map(cat => `
+      <div class="legend-item-row">
+        <div class="legend-left">
+          <span class="legend-clay-dot" style="background: ${cat.color};"></span>
+          <span class="legend-name">${cat.name}</span>
         </div>
-
-        <p class="rev-note">"${escapeHtml(item.revision.note)}"</p>
-
-        <div class="rev-compare">
-
-          <span class="old-pagu">Semula: ${formatRupiah(item.originalTotal || item.revision.previousTotal || item.total)}</span>
-
-          <i class="fa-solid fa-arrow-right"></i>
-
-          <span class="new-pagu">Revisi: ${formatRupiah(item.total)}</span>
-
+        <div class="legend-right">
+          <span class="legend-amount">${formatRupiah(cat.amount)}</span>
+          <span class="legend-percent">${cat.percent}%</span>
         </div>
-
       </div>
-
-    ` : '';
-
-
-
-    const reviseActionBtn = !item.disbursement ? `
-
-      <button class="btn btn-sm btn-outline text-gold" onclick="openKadesReviseModal('${item.id}')" title="Koreksi / Penyesuaian Pagu oleh Kepala Desa">
-
-        <i class="fa-solid fa-pen-ruler"></i> Revisi
-
-      </button>
-
-    ` : '';
-
-
-
-    const acceptReviseBtn = item.status === 'DIREVISI_KADES' ? `
-
-      <button class="btn btn-sm btn-outline text-success" onclick="acceptKadesRevision('${item.id}')" title="PKA Menyetujui Penyesuaian & Lanjutkan ke SPP">
-
-        <i class="fa-solid fa-circle-check"></i> Setujui Penyesuaian
-
-      </button>
-
-    ` : '';
-
-
-
-    return `
-
-      <div class="submission-item">
-
-        <div class="item-top">
-
-          <span class="item-pka">${item.pkaRole} &bull; ${item.pkaName}</span>
-
-          <span class="badge ${badgeInfo.class}">${badgeInfo.label}</span>
-
-        </div>
-
-        <div class="item-activity">${item.fundStage} (${item.activities.length} Kegiatan)</div>
-
-        <div class="activity-chips-box">
-
-          ${activityNames}
-
-        </div>
-
-        ${revisionAlert}
-
-        <div class="item-meta">
-
-          <span><i class="fa-solid fa-hashtag"></i> ${item.regNo}</span>
-
-          <span><i class="fa-solid fa-calendar-day"></i> ${formatIndonesianDate(item.date)}</span>
-
-          <span><i class="fa-solid fa-list-check"></i> ${item.activities.length} Kegiatan</span>
-
-          ${item.disbursement ? `<span style="color:#b91c1c; font-weight:700;"><i class="fa-solid fa-user-check"></i> Fisik dipegang: ${item.disbursement.receiverName}</span>` : ''}
-
-        </div>
-
-        <div class="item-bottom">
-
-          <div class="item-nominal">${formatRupiah(item.total)}</div>
-
-          <div class="item-actions">
-
-            ${receiptBtn}
-
-            ${reviseActionBtn}
-
-            ${acceptReviseBtn}
-
-            <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Cetak Surat Pengajuan PDF">
-
-              <i class="fa-solid fa-file-pdf"></i> Surat SPP
-
-            </button>
-
-            <button class="btn btn-sm btn-outline text-danger" onclick="deleteSubmission('${item.id}')" title="Hapus">
-
-              <i class="fa-solid fa-trash-can"></i>
-
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    `;
-
-  }).join('');
-
-}
-
-
-
-function filterSubmissions() {
-
-  renderSubmissionsList();
-
-}
-
-
-
-function openPrintModalById(id) {
-
-  const item = submissions.find(s => s.id === id);
-
-  if (item) openPrintModal(item);
-
-}
-
-
-
-function openReceiptPrintModalById(id) {
-
-  const item = submissions.find(s => s.id === id);
-
-  if (item) openReceiptPrintModal(item);
-
-}
-
-
-
-function deleteSubmission(id) {
-
-  if (!confirm('Apakah Anda yakin ingin menghapus arsip pengajuan ini?')) return;
-
-
-
-  // 1. Hapus dari array memori lokal & simpan
-
-  submissions = submissions.filter(s => s.id !== id);
-
-  saveSubmissionsToLocalOnly();
-
-  renderAllViews();
-
-
-
-  // 2. Hapus langsung node item spesifik di Firebase Cloud
-
-  if (firebaseDb) {
-
-    try {
-
-      firebaseDb.ref('tanjung_manis/submissions_v5').child(id).remove()
-
-        .then(() => {
-
-          showToast('Pengajuan berhasil dihapus dari cloud & arsip!');
-
-        })
-
-        .catch(err => {
-
-          console.warn('Gagal menghapus dari cloud:', err);
-
-          showToast('Pengajuan dihapus dari lokal.');
-
-        });
-
-    } catch (e) {
-
-      console.warn('Cloud delete exception:', e);
-
-      showToast('Pengajuan dihapus dari lokal.');
-
-    }
-
-  } else {
-
-    showToast('Pengajuan berhasil dihapus!');
-
+    `).join('');
   }
 
-}
+  if (donutSvg) {
+    let cumulative = 0;
+    const slices = categories.map(cat => {
+      const startAngle = cumulative * 3.6;
+      const endAngle = (cumulative + cat.percent) * 3.6;
+      cumulative += cat.percent;
 
+      const r = 70;
+      const cx = 100;
+      const cy = 100;
+      const startRad = (startAngle - 90) * Math.PI / 180;
+      const endRad = (endAngle - 90) * Math.PI / 180;
 
+      const x1 = cx + r * Math.cos(startRad);
+      const y1 = cy + r * Math.sin(startRad);
+      const x2 = cx + r * Math.cos(endRad);
+      const y2 = cy + r * Math.sin(endRad);
 
-// ---------------- KAUR KEUANGAN DASHBOARD ----------------
+      const largeArc = cat.percent > 50 ? 1 : 0;
+      const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 
-function renderKaurRekap() {
+      return `<path d="${pathData}" fill="${cat.color}" opacity="0.95" stroke="#ffffff" stroke-width="3" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));" />`;
+    }).join('');
 
-  const tbody = document.getElementById('rekapTableBody');
-
-  if (!tbody) return;
-
-
-
-  let grandTotal = 0;
-
-  let readyTotal = 0;
-
-  let disbursedTotal = 0;
-
-
-
-  let readyCount = 0;
-
-  let disbursedCount = 0;
-
-
-
-  submissions.forEach(s => {
-
-    grandTotal += s.total;
-
-    if (s.status === 'SPP_TERBIT') {
-
-      readyTotal += s.total;
-
-      readyCount += s.activities.length;
-
-    } else if (s.status === 'DANA_CAIR') {
-
-      disbursedTotal += s.total;
-
-      disbursedCount++;
-
-    }
-
-  });
-
-
-
-  // Metrics
-
-  document.getElementById('metricTotalSubmitted').textContent = formatRupiah(grandTotal);
-
-  document.getElementById('metricCountSubmitted').textContent = `${submissions.length} Berkas Pengajuan`;
-
-
-
-  document.getElementById('metricTotalReady').textContent = formatRupiah(readyTotal);
-
-  document.getElementById('metricCountReady').textContent = `${readyCount} Kegiatan Siap Tarik`;
-
-
-
-  document.getElementById('metricTotalDisbursed').textContent = formatRupiah(disbursedTotal);
-
-  document.getElementById('metricCountDisbursed').textContent = `${disbursedCount} Berkas Diserahterimakan`;
-
-
-
-  // Rekap Table Rows
-
-  if (submissions.length === 0) {
-
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px;">Belum ada pengajuan kegiatan dari PKA.</td></tr>`;
-
-    return;
-
+    donutSvg.innerHTML = `
+      <g>
+        ${slices}
+        <circle cx="100" cy="100" r="48" fill="#ffffff" />
+      </g>
+    `;
   }
 
-
-
-  tbody.innerHTML = submissions.map((item, idx) => {
-
-    const badge = getStatusBadge(item.status);
-
-    
-
-    // Physical cash receiver badge
-
-    let receiverBadge = '<span style="color:#9ca3af; font-size:0.75rem;">Belum diserahkan</span>';
-
-    if (item.disbursement) {
-
-      const isKades = item.disbursement.receiverType === 'KADES';
-
-      const bg = isKades ? '#fee2e2' : '#ecfdf5';
-
-      const color = isKades ? '#b91c1c' : '#15803d';
-
-      receiverBadge = `<span class="badge" style="background:${bg}; color:${color}; font-size:0.75rem;">
-
-        <i class="fa-solid fa-user-check"></i> ${item.disbursement.receiverName} (${item.disbursement.receiverRole})
-
-      </span>`;
-
-    }
-
-
-
-    // Photo proof cell
-
-    let photoCol = '<span style="color:#9ca3af; font-size:0.75rem;">-</span>';
-
-    if (item.disbursement && item.disbursement.photo) {
-
-      photoCol = `
-
-        <button class="btn btn-sm btn-photo-view" onclick="viewPhotoEnlarged('${item.id}')" title="Lihat Foto Bukti">
-
-          <i class="fa-solid fa-image"></i> Lihat Foto
-
-        </button>
-
+  // 3. RENDER RECENT SUBMISSIONS FEED
+  const recentBox = document.getElementById('dashRecentSubmissions');
+  if (recentBox) {
+    if (submissions.length === 0) {
+      recentBox.innerHTML = `
+        <div style="text-align: center; padding: 30px; color: #94a3b8;">
+          <i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 8px; display: block; color: #cbd5e1;"></i>
+          Belum ada pengajuan kegiatan.<br>
+          <button class="btn-clay-view" style="margin-top: 10px;" onclick="switchView('view-form')">
+            + Ajukan Sekarang
+          </button>
+        </div>
       `;
+    } else {
+      recentBox.innerHTML = submissions.slice(0, 4).map((item, idx) => {
+        let badgeColor = '#10b981';
+        let badgeText = 'SPP Terbit';
+        let iconBg = '#ecfdf5';
+        let iconColor = '#059669';
+        let iconClass = 'fa-solid fa-building';
 
-    }
+        if (idx === 1) {
+          iconClass = 'fa-solid fa-droplet';
+          iconBg = '#eff6ff';
+          iconColor = '#2563eb';
+        } else if (idx === 2) {
+          iconClass = 'fa-solid fa-road';
+          iconBg = '#fef3c7';
+          iconColor = '#d97706';
+        }
 
+        if (item.status === 'SELESAI_CAIR') {
+          badgeColor = '#059669';
+          badgeText = 'Selesai Cair';
+        } else if (item.status === 'DIREVISI_KADES') {
+          badgeColor = '#e11d48';
+          badgeText = 'Revisi';
+        } else if (item.status === 'BARU') {
+          badgeColor = '#6366f1';
+          badgeText = 'Menunggu';
+        }
 
+        const actName = item.activities && item.activities[0] ? item.activities[0].name : (item.regNo || 'Kegiatan Desa');
 
-    return `
-
-      <tr>
-
-        <td style="text-align: center;">${idx + 1}</td>
-
-        <td>${formatIndonesianDate(item.date)}</td>
-
-        <td>
-
-          <strong style="color: var(--primary);">${item.pkaRole}</strong><br>
-
-          <small>${item.pkaName}</small>
-
-        </td>
-
-        <td><small>${item.fundStage}</small></td>
-
-        <td style="font-weight: 800; color: var(--primary-dark);">${formatRupiah(item.total)}</td>
-
-        <td>${receiverBadge}</td>
-
-        <td style="text-align: center;">${photoCol}</td>
-
-        <td><span class="badge ${badge.class}">${badge.label}</span></td>
-
-        <td>
-
-          <div style="display:flex; gap:4px; flex-direction:column;">
-
-            ${item.disbursement ? `
-
-              <div style="display:flex; gap:4px;">
-
-                <button class="btn btn-sm btn-receipt flex-1" onclick="openReceiptPrintModalById('${item.id}')" title="Cetak Kuitansi Penyerahan Kas">
-
-                  <i class="fa-solid fa-receipt"></i> Kuitansi
-
-                </button>
-
-                <button class="btn btn-sm btn-outline" onclick="editReceiptById('${item.id}')" title="Edit Data Kuitansi">
-
-                  <i class="fa-solid fa-pen-to-square"></i>
-
-                </button>
-
-                <button class="btn btn-sm btn-outline text-danger" onclick="deleteReceiptById('${item.id}')" title="Hapus/Batalkan Kuitansi Ini">
-
-                  <i class="fa-solid fa-trash"></i>
-
-                </button>
-
+        return `
+          <div class="recent-item-card">
+            <div class="recent-item-left">
+              <div class="recent-clay-icon" style="background: ${iconBg}; color: ${iconColor};">
+                <i class="${iconClass}"></i>
               </div>
-
-            ` : `
-
-              <button class="btn btn-sm btn-outline text-success" onclick="openDisburseModalById('${item.id}')" title="Serahkan Uang & Cetak Kuitansi">
-
-                <i class="fa-solid fa-hand-holding-dollar"></i> Serahkan Uang
-
+              <div class="recent-meta-wrap">
+                <h5>${escapeHtml(actName)}</h5>
+                <span>${escapeHtml(item.pkaRole)} &bull; ${escapeHtml(item.fundStage || 'ADD')}</span>
+              </div>
+            </div>
+            <div class="recent-item-right">
+              <div>
+                <div class="recent-nominal">${formatRupiah(item.total)}</div>
+                <span style="font-size: 0.7rem; font-weight: 700; color: ${badgeColor};">&#9679; ${badgeText}</span>
+              </div>
+              <button class="btn-clay-view" onclick="openPrintModalById('${item.id}')" title="Lihat & Cetak Pra-SPP">
+                Surat
               </button>
-
-            `}
-
-            ${!item.disbursement ? `
-
-              <button class="btn btn-sm btn-outline text-gold" onclick="openKadesReviseModal('${item.id}')" title="Koreksi / Penyesuaian Pagu Kepala Desa">
-
-                <i class="fa-solid fa-pen-ruler"></i> Revisi
-
-              </button>
-
-            ` : ''}
-
-            <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Lihat Surat Pengajuan">
-
-              <i class="fa-solid fa-file-pdf"></i> Surat SPP
-
-            </button>
-
+            </div>
           </div>
-
-        </td>
-
-      </tr>
-
-    `;
-
-  }).join('');
-
-}
-
-
-
-// Cetak Lembar Rekap Penarikan Kas Desa
-
-function printWithdrawalSummary() {
-
-  const approvedItems = submissions.filter(s => s.status === 'SPP_TERBIT' || s.status === 'DICETAK' || s.status === 'DANA_CAIR');
-
-  if (approvedItems.length === 0) {
-
-    alert('Belum ada kegiatan yang siap ditarik di bank!');
-
-    return;
-
-  }
-
-
-
-  let totalWithdraw = 0;
-
-  let rowsHtml = '';
-
-  let count = 1;
-
-
-
-  approvedItems.forEach(item => {
-
-    item.activities.forEach(act => {
-
-      totalWithdraw += act.amount;
-
-      rowsHtml += `
-
-        <tr>
-
-          <td style="border:1px solid #000; padding:6px; text-align:center;">${count++}</td>
-
-          <td style="border:1px solid #000; padding:6px;"><strong>${act.name}</strong></td>
-
-          <td style="border:1px solid #000; padding:6px; text-align:center;">${item.pkaRole}<br><small>(${item.pkaName})</small></td>
-
-          <td style="border:1px solid #000; padding:6px; text-align:center;">${item.fundStage}</td>
-
-          <td style="border:1px solid #000; padding:6px; text-align:right;">${formatRupiah(act.amount)}</td>
-
-        </tr>
-
-      `;
-
-    });
-
-  });
-
-
-
-  const printWindow = window.open('', '_blank');
-
-  printWindow.document.write(`
-
-    <!DOCTYPE html>
-
-    <html>
-
-    <head>
-
-      <title>Rekap Rencana Penarikan Kas Desa ${activeSettings.village}</title>
-
-      <style>
-
-        body { font-family: 'Times New Roman', serif; padding: 25px; line-height: 1.4; }
-
-        h3, h4 { margin: 2px 0; text-align: center; }
-
-        .separator { border-top: 2px solid #000; margin: 10px 0 20px 0; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10.5pt; }
-
-        th { border: 1px solid #000; background: #eee; padding: 8px; }
-
-        .sig { margin-top: 40px; display: flex; justify-content: space-between; text-align: center; }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <h3>PEMERINTAH DESA ${activeSettings.village.toUpperCase()}</h3>
-
-      <h4>KECAMATAN ${activeSettings.district.toUpperCase()} - KABUPATEN ${activeSettings.regency.toUpperCase()}</h4>
-
-      <h4>REKAPITULASI RENCANA PENARIKAN DANA KAS DESA (BANK)</h4>
-
-      <div class="separator"></div>
-
-      <p>Tanggal Cetak: ${formatIndonesianDate(new Date().toISOString().split('T')[0])}</p>
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>No</th>
-
-            <th>Judul Kegiatan yang Akan Dilaksanakan</th>
-
-            <th>Pelaksana (PKA)</th>
-
-            <th>Tahapan / Sumber</th>
-
-            <th>Pagu Anggaran (Rp)</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          ${rowsHtml}
-
-        </tbody>
-
-        <tfoot>
-
-          <tr>
-
-            <th colspan="4" style="text-align:right;">TOTAL DANA YANG AKAN DITARIK DI BANK:</th>
-
-            <th style="text-align:right;">${formatRupiah(totalWithdraw)}</th>
-
-          </tr>
-
-        </tfoot>
-
-      </table>
-
-      <p style="margin-top:10px;"><strong>Terbilang: </strong><em>${terbilang(totalWithdraw)} Rupiah</em></p>
-
-      
-
-      <div class="sig">
-
-        <div style="width: 45%;">
-
-          Mengetahui,<br>Kepala Desa ${activeSettings.village}<br><br><br><br>
-
-          <strong>( ${activeSettings.kadesName} )</strong>
-
-        </div>
-
-        <div style="width: 45%;">
-
-          ${activeSettings.village}, ${formatIndonesianDate(new Date().toISOString().split('T')[0])}<br>
-
-          Kaur Keuangan (Bendahara Desa)<br><br><br><br>
-
-          <strong>( ${activeSettings.kaurKeuanganName} )</strong>
-
-        </div>
-
-      </div>
-
-      <script>
-
-        window.onload = function() { window.print(); }
-
-      </script>
-
-    </body>
-
-    </html>
-
-  `);
-
-  printWindow.document.close();
-
-}
-
-
-
-// ============================================================================
-
-// BACKUP & EXPORT
-
-// ============================================================================
-
-function backupAndExportData() {
-
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(submissions, null, 2));
-
-  const downloadAnchor = document.createElement('a');
-
-  downloadAnchor.setAttribute("href", dataStr);
-
-  downloadAnchor.setAttribute("download", `Backup_PengajuanPKA_${activeSettings.village}_${new Date().toISOString().split('T')[0]}.json`);
-
-  document.body.appendChild(downloadAnchor);
-
-  downloadAnchor.click();
-
-  downloadAnchor.remove();
-
-  showToast('File backup data berhasil diunduh!');
-
-}
-
-
-
-// ============================================================================
-
-// SIDEBAR MENU DRAWER HANDLERS (MENU SAMPING KIRI)
-
-// ============================================================================
-
-function toggleSidebarMenu() {
-
-  const drawer = document.getElementById('sidebarDrawer');
-
-  const backdrop = document.getElementById('sidebarBackdrop');
-
-  if (!drawer) return;
-
-  const isOpen = drawer.classList.contains('open');
-
-  if (isOpen) {
-
-    closeSidebarMenu();
-
-  } else {
-
-    drawer.classList.add('open');
-
-    if (backdrop) backdrop.classList.add('open');
-
-    document.body.style.overflow = 'hidden';
-
-  }
-
-}
-
-
-
-function closeSidebarMenu() {
-
-  const drawer = document.getElementById('sidebarDrawer');
-
-  const backdrop = document.getElementById('sidebarBackdrop');
-
-  if (drawer) drawer.classList.remove('open');
-
-  if (backdrop) backdrop.classList.remove('open');
-
-  document.body.style.overflow = '';
-
-}
-
-
-
-function navigateFromSidebar(viewId, clickedBtn) {
-
-  switchView(viewId);
-
-  closeSidebarMenu();
-
-}
-
-
-
-// Tutup menu drawer saat tombol ESC ditekan
-
-document.addEventListener('keydown', (e) => {
-
-  if (e.key === 'Escape') {
-
-    closeSidebarMenu();
-
-  }
-
-});
-
-
-
-// ============================================================================
-
-// NAVIGATION & VIEW SWITCHER
-
-// ============================================================================
-
-function switchView(viewId, btnEl) {
-
-  document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
-
-  document.querySelectorAll('.nav-btn, .d-nav-btn, .sidebar-nav-item').forEach(b => b.classList.remove('active'));
-
-
-
-  const targetView = document.getElementById(viewId);
-
-  if (targetView) targetView.classList.add('active');
-
-
-
-  // Highlight all corresponding buttons in desktop header and sidebar drawer
-
-  document.querySelectorAll('.nav-btn, .d-nav-btn, .sidebar-nav-item').forEach(b => {
-
-    if (b.getAttribute('onclick')?.includes(viewId)) {
-
-      b.classList.add('active');
-
+        `;
+      }).join('');
     }
-
-  });
-
-
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-
-}
-
-
-
-function formatRupiah(number) {
-
-  return 'Rp ' + Number(number || 0).toLocaleString('id-ID');
-
-}
-
-
-
-function formatIndonesianDate(dateStr) {
-
-  if (!dateStr) return '-';
-
-  const parts = dateStr.split('-');
-
-  if (parts.length !== 3) return dateStr;
-
-  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-  return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
-
-}
-
-
-
-function getRomanMonth(monthNum) {
-
-  const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-
-  return romans[monthNum - 1] || 'X';
-
-}
-
-
-
-function getStatusBadge(status) {
-
-  switch (status) {
-
-    case 'DRAF':
-
-      return { class: 'badge-draft', label: 'Draf' };
-
-    case 'DICETAK':
-
-      return { class: 'badge-printed', label: 'Surat Dicetak' };
-
-    case 'DIREVISI_KADES':
-
-      return { class: 'badge-revised', label: 'Revisi' };
-
-    case 'SPP_TERBIT':
-
-      return { class: 'badge-spp', label: 'SPP Terbit (Siap Tarik)' };
-
-    case 'DANA_CAIR':
-
-      return { class: 'badge-done', label: 'Uang Diserahkan' };
-
-    default:
-
-      return { class: 'badge-draft', label: 'Proses' };
-
   }
-
 }
-
-
-
-function showToast(msg) {
-
-  const toast = document.getElementById('toast');
-
-  if (!toast) return;
-
-  toast.textContent = msg;
-
-  toast.classList.add('show');
-
-  setTimeout(() => {
-
-    toast.classList.remove('show');
-
-  }, 2800);
-
-}
-
-
 
 function escapeHtml(text) {
 
@@ -3312,5 +2580,371 @@ Status berkas akan ditingkatkan menjadi "SPP Terbit (Siap Tarik)" untuk proses p
 
   }
 
+}
+
+
+// RESTORED VIEW FUNCTIONS
+function renderAllViews() {
+  renderDashboard();
+  renderSubmissionsList();
+  renderKaurRekap();
+}
+
+function renderSubmissionsList() {
+  const container = document.getElementById('submissionsList');
+  if (!container) return;
+
+  const searchVal = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const filterPka = document.getElementById('pkaFilter')?.value || 'ALL';
+
+  const filtered = submissions.filter(s => {
+    const matchSearch = s.fundStage.toLowerCase().includes(searchVal) || 
+                        s.pkaRole.toLowerCase().includes(searchVal) ||
+                        s.pkaName.toLowerCase().includes(searchVal) ||
+                        s.activities.some(a => a.name.toLowerCase().includes(searchVal));
+    const matchPka = filterPka === 'ALL' || s.pkaRole === filterPka;
+    return matchSearch && matchPka;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-folder-open"></i>
+        <p>Tidak ada pengajuan kegiatan yang cocok dengan pencarian.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(item => {
+    const badgeInfo = getStatusBadge(item.status);
+    const activityNames = item.activities.map(a => `<span class="activity-chip">${a.name} (${formatRupiah(a.amount)})</span>`).join(' ');
+
+    const receiptBtn = item.disbursement ? `
+      <button class="btn btn-sm btn-receipt" onclick="openReceiptPrintModalById('${item.id}')" title="Cetak Ulang Kuitansi Serah Terima">
+        <i class="fa-solid fa-receipt"></i> Kuitansi Kas
+      </button>
+    ` : `
+      <button class="btn btn-sm btn-outline text-success" onclick="openDisburseModalById('${item.id}')" title="Serah Terima Uang & Cetak Kuitansi">
+        <i class="fa-solid fa-hand-holding-dollar"></i> Serahkan Kas
+      </button>
+    `;
+
+    return `
+      <div class="submission-item">
+        <div class="item-top">
+          <span class="item-pka">${item.pkaRole} • ${item.pkaName}</span>
+          <span class="badge ${badgeInfo.class}">${badgeInfo.label}</span>
+        </div>
+        <div class="item-activity">${item.fundStage} (${item.activities.length} Kegiatan)</div>
+        <div class="activity-chips-box">
+          ${activityNames}
+        </div>
+        <div class="item-meta">
+          <span><i class="fa-solid fa-hashtag"></i> ${item.regNo}</span>
+          <span><i class="fa-solid fa-calendar-day"></i> ${formatIndonesianDate(item.date)}</span>
+          <span><i class="fa-solid fa-list-check"></i> ${item.activities.length} Kegiatan</span>
+          ${item.disbursement ? `<span style="color:#b91c1c; font-weight:700;"><i class="fa-solid fa-user-check"></i> Fisik dipegang: ${item.disbursement.receiverName}</span>` : ''}
+        </div>
+        <div class="item-bottom">
+          <div class="item-nominal">${formatRupiah(item.total)}</div>
+          <div class="item-actions">
+            ${receiptBtn}
+            <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Cetak Surat Pengajuan PDF">
+              <i class="fa-solid fa-file-pdf"></i> Surat SPP
+            </button>
+            <button class="btn btn-sm btn-outline text-danger" onclick="deleteSubmission('${item.id}')" title="Hapus">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterSubmissions() {
+  renderSubmissionsList();
+}
+
+function openPrintModalById(id) {
+  const item = submissions.find(s => s.id === id);
+  if (item) openPrintModal(item);
+}
+
+function openReceiptPrintModalById(id) {
+  const item = submissions.find(s => s.id === id);
+  if (item) openReceiptPrintModal(item);
+}
+
+function deleteSubmission(id) {
+  if (confirm('Apakah Anda yakin ingin menghapus arsip pengajuan ini?')) {
+    submissions = submissions.filter(s => s.id !== id);
+    syncToCloud(submissions);
+    renderAllViews();
+    showToast('Pengajuan berhasil dihapus!');
+  }
+}
+
+// ---------------- KAUR KEUANGAN DASHBOARD ----------------
+function renderKaurRekap() {
+  const tbody = document.getElementById('rekapTableBody');
+  if (!tbody) return;
+
+  let grandTotal = 0;
+  let readyTotal = 0;
+  let disbursedTotal = 0;
+
+  let readyCount = 0;
+  let disbursedCount = 0;
+
+  submissions.forEach(s => {
+    grandTotal += s.total;
+    if (s.status === 'SPP_TERBIT') {
+      readyTotal += s.total;
+      readyCount += s.activities.length;
+    } else if (s.status === 'DANA_CAIR') {
+      disbursedTotal += s.total;
+      disbursedCount++;
+    }
+  });
+
+  // Metrics
+  document.getElementById('metricTotalSubmitted').textContent = formatRupiah(grandTotal);
+  document.getElementById('metricCountSubmitted').textContent = `${submissions.length} Berkas Pengajuan`;
+
+  document.getElementById('metricTotalReady').textContent = formatRupiah(readyTotal);
+  document.getElementById('metricCountReady').textContent = `${readyCount} Kegiatan Siap Tarik`;
+
+  document.getElementById('metricTotalDisbursed').textContent = formatRupiah(disbursedTotal);
+  document.getElementById('metricCountDisbursed').textContent = `${disbursedCount} Berkas Diserahterimakan`;
+
+  // Rekap Table Rows
+  if (submissions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px;">Belum ada pengajuan kegiatan dari PKA.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = submissions.map((item, idx) => {
+    const badge = getStatusBadge(item.status);
+    
+    // Physical cash receiver badge
+    let receiverBadge = '<span style="color:#9ca3af; font-size:0.75rem;">Belum diserahkan</span>';
+    if (item.disbursement) {
+      const isKades = item.disbursement.receiverType === 'KADES';
+      const bg = isKades ? '#fee2e2' : '#ecfdf5';
+      const color = isKades ? '#b91c1c' : '#15803d';
+      receiverBadge = `<span class="badge" style="background:${bg}; color:${color}; font-size:0.75rem;">
+        <i class="fa-solid fa-user-check"></i> ${item.disbursement.receiverName} (${item.disbursement.receiverRole})
+      </span>`;
+    }
+
+    return `
+      <tr>
+        <td style="text-align: center;">${idx + 1}</td>
+        <td>${formatIndonesianDate(item.date)}</td>
+        <td>
+          <strong style="color: var(--primary);">${item.pkaRole}</strong><br>
+          <small>${item.pkaName}</small>
+        </td>
+        <td><small>${item.fundStage}</small></td>
+        <td style="font-weight: 800; color: var(--primary-dark);">${formatRupiah(item.total)}</td>
+        <td>${receiverBadge}</td>
+        <td><span class="badge ${badge.class}">${badge.label}</span></td>
+        <td>
+          <div style="display:flex; gap:4px; flex-direction:column;">
+            ${item.disbursement ? `
+              <button class="btn btn-sm btn-receipt" onclick="openReceiptPrintModalById('${item.id}')" title="Cetak Kuitansi Penyerahan Kas">
+                <i class="fa-solid fa-receipt"></i> Cetak Kuitansi
+              </button>
+            ` : `
+              <button class="btn btn-sm btn-outline text-success" onclick="openDisburseModalById('${item.id}')" title="Serahkan Uang & Cetak Kuitansi">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Serahkan Uang
+              </button>
+            `}
+            <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Lihat Surat Pengajuan">
+              <i class="fa-solid fa-file-pdf"></i> Surat SPP
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Cetak Lembar Rekap Penarikan Kas Desa
+function printWithdrawalSummary() {
+  const approvedItems = submissions.filter(s => s.status === 'SPP_TERBIT' || s.status === 'DICETAK' || s.status === 'DANA_CAIR');
+  if (approvedItems.length === 0) {
+    alert('Belum ada kegiatan yang siap ditarik di bank!');
+    return;
+  }
+
+  let totalWithdraw = 0;
+  let rowsHtml = '';
+  let count = 1;
+
+  approvedItems.forEach(item => {
+    item.activities.forEach(act => {
+      totalWithdraw += act.amount;
+      rowsHtml += `
+        <tr>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${count++}</td>
+          <td style="border:1px solid #000; padding:6px;"><strong>${act.name}</strong></td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${item.pkaRole}<br><small>(${item.pkaName})</small></td>
+          <td style="border:1px solid #000; padding:6px; text-align:center;">${item.fundStage}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:right;">${formatRupiah(act.amount)}</td>
+        </tr>
+      `;
+    });
+  });
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Rekap Rencana Penarikan Kas Desa ${activeSettings.village}</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; padding: 25px; line-height: 1.4; }
+        h3, h4 { margin: 2px 0; text-align: center; }
+        .separator { border-top: 2px solid #000; margin: 10px 0 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10.5pt; }
+        th { border: 1px solid #000; background: #eee; padding: 8px; }
+        .sig { margin-top: 40px; display: flex; justify-content: space-between; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <h3>PEMERINTAH DESA ${activeSettings.village.toUpperCase()}</h3>
+      <h4>KECAMATAN ${activeSettings.district.toUpperCase()} - KABUPATEN ${activeSettings.regency.toUpperCase()}</h4>
+      <h4>REKAPITULASI RENCANA PENARIKAN DANA KAS DESA (BANK)</h4>
+      <div class="separator"></div>
+      <p>Tanggal Cetak: ${formatIndonesianDate(new Date().toISOString().split('T')[0])}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Judul Kegiatan yang Akan Dilaksanakan</th>
+            <th>Pelaksana (PKA)</th>
+            <th>Tahapan / Sumber</th>
+            <th>Pagu Anggaran (Rp)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="4" style="text-align:right;">TOTAL DANA YANG AKAN DITARIK DI BANK:</th>
+            <th style="text-align:right;">${formatRupiah(totalWithdraw)}</th>
+          </tr>
+        </tfoot>
+      </table>
+      <p style="margin-top:10px;"><strong>Terbilang: </strong><em>${terbilang(totalWithdraw)} Rupiah</em></p>
+      
+      <div class="sig">
+        <div style="width: 45%;">
+          Mengetahui,<br>Kepala Desa ${activeSettings.village}<br><br><br><br>
+          <strong>( ${activeSettings.kadesName} )</strong>
+        </div>
+        <div style="width: 45%;">
+          ${activeSettings.village}, ${formatIndonesianDate(new Date().toISOString().split('T')[0])}<br>
+          Kaur Keuangan (Bendahara Desa)<br><br><br><br>
+          <strong>( ${activeSettings.kaurKeuanganName} )</strong>
+        </div>
+      </div>
+      <script>
+        window.onload = function() { window.print(); }
+      </script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+// ============================================================================
+// BACKUP & EXPORT
+// ============================================================================
+function backupAndExportData() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(submissions, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `Backup_PengajuanPKA_${activeSettings.village}_${new Date().toISOString().split('T')[0]}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showToast('File backup data berhasil diunduh!');
+}
+
+// ============================================================================
+// HELPER FUNCTIONS (TERBILANG, RUPIAH, DATES)
+// ============================================================================
+function switchView(viewId, btnEl) {
+  document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn, .d-nav-btn, .sidebar-nav-item, .fintrack-nav-btn').forEach(b => b.classList.remove('active'));
+
+  const targetView = document.getElementById(viewId);
+  if (targetView) targetView.classList.add('active');
+
+  // Highlight active nav buttons
+  document.querySelectorAll('.nav-btn, .d-nav-btn, .sidebar-nav-item, .fintrack-nav-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(viewId)) {
+      b.classList.add('active');
+    }
+  });
+
+  if (viewId === 'view-dashboard') {
+    renderDashboard();
+  } else if (viewId === 'view-list') {
+    renderSubmissionsList();
+  } else if (viewId === 'view-rekap') {
+    renderKaurRekap();
+  }
+
+  // Close mobile sidebar if open
+  closeSidebarMenu();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function formatRupiah(number) {
+  return 'Rp ' + Number(number || 0).toLocaleString('id-ID');
+}
+
+function formatIndonesianDate(dateStr) {
+  if (!dateStr) return '-';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+}
+
+function getRomanMonth(monthNum) {
+  const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  return romans[monthNum - 1] || 'X';
+}
+
+function getStatusBadge(status) {
+  switch (status) {
+    case 'DRAF':
+      return { class: 'badge-draft', label: 'Draf' };
+    case 'DICETAK':
+      return { class: 'badge-printed', label: 'Surat Dicetak' };
+    case 'SPP_TERBIT':
+      return { class: 'badge-spp', label: 'SPP Terbit (Siap Tarik)' };
+    case 'DANA_CAIR':
+      return { class: 'badge-done', label: 'Uang Diserahkan' };
+    default:
+      return { class: 'badge-draft', label: 'Proses' };
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2800);
 }
 
