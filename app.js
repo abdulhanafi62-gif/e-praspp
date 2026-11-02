@@ -499,6 +499,20 @@ function openPrintModal(item) {
   document.getElementById('docTotalAmount').textContent = formatRupiah(item.total);
   document.getElementById('docTerbilangText').textContent = terbilang(item.total) + ' Rupiah';
 
+  // Catatan Koreksi / Penyesuaian Pagu oleh Kepala Desa (PKPKD)
+  const revBox = document.getElementById('docRevisionBox');
+  if (revBox) {
+    if (item.revision) {
+      revBox.style.display = 'block';
+      document.getElementById('docRevisionNoteText').textContent = `"${item.revision.note}"`;
+      const prevNominal = item.originalTotal || item.revision.previousTotal || item.total;
+      document.getElementById('docRevisionMetaText').innerHTML = 
+        `Pagu semula yang diajukan PKA: <strong>${formatRupiah(prevNominal)}</strong> &bull; Disesuaikan & Disetujui Kepala Desa (PKPKD): <strong>${formatRupiah(item.total)}</strong>`;
+    } else {
+      revBox.style.display = 'none';
+    }
+  }
+
   // Fill Signatures (Exact Submitting PKA)
   document.getElementById('sigPkaRole').textContent = item.pkaRole;
   document.getElementById('sigPkaName').textContent = `( ${item.pkaName} )`;
@@ -903,6 +917,16 @@ async function shareToWhatsApp() {
 
   showToast('Memproses file PDF surat pengajuan (1 lembar rapi)...');
 
+  let revisionNotice = '';
+  if (s.revision) {
+    revisionNotice = 
+`
+*CATATAN KOREKSI KEPALA DESA (PKPKD):*
+"${s.revision.note}"
+*Pagu Semula Diajukan:* ${formatRupiah(s.originalTotal || s.revision.previousTotal || s.total)} ➔ *Disetujui Kades:* ${formatRupiah(s.total)}
+`;
+  }
+
   const shareText = 
 `*SURAT PENGAJUAN PRA-SPP DESA ${activeSettings.village.toUpperCase()}*
 ------------------------------------------------
@@ -910,9 +934,9 @@ async function shareToWhatsApp() {
 *Pelaksana (PKA):* ${s.pkaRole} (${s.pkaName})
 *Tahapan / Sumber:* ${s.fundStage}
 *Tanggal Pengajuan:* ${formatIndonesianDate(s.date)}
-*TOTAL DANA DIAJUKAN:* ${formatRupiah(s.total)}
+*TOTAL DANA:* ${formatRupiah(s.total)}
 *Terbilang:* ${terbilang(s.total)} Rupiah
-
+${revisionNotice}
 _Catatan:_ Terlampir dokumen resmi Surat Pengajuan Pra-SPP Desa Tanjung Manis. Pelaksana bertanggung jawab atas pelaksanaan teknis kegiatan dan penyelesaian SPJ diselesaikan berdasarkan bukti transaksi riil atas belanja yang disetujui Kepala Desa selaku PKPKD.`;
 
   try {
@@ -1063,16 +1087,44 @@ function renderSubmissionsList() {
       </button>
     `;
 
+        const revisionAlert = item.revision ? `
+      <div class="revision-alert-box">
+        <div class="rev-header">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Catatan Koreksi Kepala Desa (PKPKD):</span>
+        </div>
+        <p class="rev-note">"${escapeHtml(item.revision.note)}"</p>
+        <div class="rev-compare">
+          <span class="old-pagu">Semula: ${formatRupiah(item.originalTotal || item.revision.previousTotal || item.total)}</span>
+          <i class="fa-solid fa-arrow-right"></i>
+          <span class="new-pagu">Disetujui: ${formatRupiah(item.total)}</span>
+        </div>
+      </div>
+    ` : '';
+
+    const reviseActionBtn = !item.disbursement ? `
+      <button class="btn btn-sm btn-outline text-gold" onclick="openKadesReviseModal('${item.id}')" title="Koreksi / Penyesuaian Pagu oleh Kepala Desa">
+        <i class="fa-solid fa-pen-ruler"></i> Revisi Kades
+      </button>
+    ` : '';
+
+    const acceptReviseBtn = item.status === 'DIREVISI_KADES' ? `
+      <button class="btn btn-sm btn-outline text-success" onclick="acceptKadesRevision('${item.id}')" title="PKA Menyetujui Penyesuaian & Lanjutkan ke SPP">
+        <i class="fa-solid fa-circle-check"></i> Setujui Penyesuaian
+      </button>
+    ` : '';
+
     return `
       <div class="submission-item">
         <div class="item-top">
-          <span class="item-pka">${item.pkaRole} • ${item.pkaName}</span>
+          <span class="item-pka">${item.pkaRole} &bull; ${item.pkaName}</span>
           <span class="badge ${badgeInfo.class}">${badgeInfo.label}</span>
         </div>
         <div class="item-activity">${item.fundStage} (${item.activities.length} Kegiatan)</div>
         <div class="activity-chips-box">
           ${activityNames}
         </div>
+        ${revisionAlert}
         <div class="item-meta">
           <span><i class="fa-solid fa-hashtag"></i> ${item.regNo}</span>
           <span><i class="fa-solid fa-calendar-day"></i> ${formatIndonesianDate(item.date)}</span>
@@ -1083,6 +1135,8 @@ function renderSubmissionsList() {
           <div class="item-nominal">${formatRupiah(item.total)}</div>
           <div class="item-actions">
             ${receiptBtn}
+            ${reviseActionBtn}
+            ${acceptReviseBtn}
             <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Cetak Surat Pengajuan PDF">
               <i class="fa-solid fa-file-pdf"></i> Surat SPP
             </button>
@@ -1233,6 +1287,11 @@ function renderKaurRekap() {
                 <i class="fa-solid fa-hand-holding-dollar"></i> Serahkan Uang
               </button>
             `}
+            ${!item.disbursement ? `
+              <button class="btn btn-sm btn-outline text-gold" onclick="openKadesReviseModal('${item.id}')" title="Koreksi / Penyesuaian Pagu Kepala Desa">
+                <i class="fa-solid fa-pen-ruler"></i> Revisi Kades
+              </button>
+            ` : ''}
             <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Lihat Surat Pengajuan">
               <i class="fa-solid fa-file-pdf"></i> Surat SPP
             </button>
@@ -1427,6 +1486,8 @@ function getStatusBadge(status) {
       return { class: 'badge-draft', label: 'Draf' };
     case 'DICETAK':
       return { class: 'badge-printed', label: 'Surat Dicetak' };
+    case 'DIREVISI_KADES':
+      return { class: 'badge-revised', label: 'Direvisi Kades (Penyesuaian Pagu)' };
     case 'SPP_TERBIT':
       return { class: 'badge-spp', label: 'SPP Terbit (Siap Tarik)' };
     case 'DANA_CAIR':
@@ -1471,4 +1532,125 @@ function terbilang(n) {
   if (n < 1000000000) return terbilang(Math.floor(n / 1000000)) + ' Juta ' + terbilang(n % 1000000);
   if (n < 1000000000000) return terbilang(Math.floor(n / 1000000000)) + ' Milyar ' + terbilang(n % 1000000000);
   return '';
+}
+
+
+// ============================================================================
+// KOREKSI & PENYESUAIAN PAGU OLEH KEPALA DESA (PKPKD)
+// ============================================================================
+let currentReviseItem = null;
+
+function openKadesReviseModal(id) {
+  const item = submissions.find(s => s.id === id);
+  if (!item) return;
+
+  currentReviseItem = item;
+  document.getElementById('reviseSubId').value = item.id;
+  document.getElementById('reviseRegNo').textContent = item.regNo || '-';
+  document.getElementById('revisePka').textContent = `${item.pkaRole} (${item.pkaName})`;
+  
+  const origTotal = item.originalTotal || (item.revision ? item.revision.previousTotal : item.total);
+  document.getElementById('reviseOriginalTotal').textContent = formatRupiah(origTotal);
+  document.getElementById('kadesRevisionNote').value = item.revision ? item.revision.note : '';
+
+  // Render Kegiatan Inputs
+  const container = document.getElementById('reviseActivitiesContainer');
+  container.innerHTML = '';
+
+  item.activities.forEach((act, idx) => {
+    const row = document.createElement('div');
+    row.className = 'revise-activity-item';
+    row.innerHTML = `
+      <div class="revise-activity-name">
+        <span>${idx + 1}. ${escapeHtml(act.name)}</span>
+      </div>
+      <div>
+        <input type="number" 
+               id="reviseActAmount_${idx}" 
+               class="revise-activity-input" 
+               value="${act.amount}" 
+               min="0" 
+               step="50000"
+               oninput="calculateReviseTotal()">
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  calculateReviseTotal();
+  document.getElementById('kadesReviseModal').classList.add('open');
+}
+
+function closeKadesReviseModal() {
+  const modal = document.getElementById('kadesReviseModal');
+  if (modal) modal.classList.remove('open');
+  currentReviseItem = null;
+}
+
+function calculateReviseTotal() {
+  if (!currentReviseItem) return;
+  let sum = 0;
+  currentReviseItem.activities.forEach((_, idx) => {
+    const inp = document.getElementById(`reviseActAmount_${idx}`);
+    if (inp) {
+      sum += parseInt(inp.value, 10) || 0;
+    }
+  });
+  document.getElementById('reviseNewTotalDisplay').textContent = formatRupiah(sum);
+}
+
+function saveKadesRevision() {
+  const id = document.getElementById('reviseSubId').value;
+  const item = submissions.find(s => s.id === id);
+  if (!item) return;
+
+  const note = document.getElementById('kadesRevisionNote').value.trim();
+  if (!note) {
+    alert('Mohon isi alasan / catatan penyesuaian pagu oleh Kepala Desa!');
+    return;
+  }
+
+  // Simpan pagu awal jika belum pernah disimpan
+  if (!item.originalTotal) {
+    item.originalTotal = item.total;
+  }
+  const prevNominal = item.total;
+
+  // Update nilai kegiatan
+  item.activities.forEach((act, idx) => {
+    const inp = document.getElementById(`reviseActAmount_${idx}`);
+    if (inp) {
+      act.amount = parseInt(inp.value, 10) || 0;
+    }
+  });
+
+  item.total = item.activities.reduce((acc, a) => acc + a.amount, 0);
+  item.status = 'DIREVISI_KADES';
+  item.revision = {
+    revisedBy: activeSettings.kadesName || 'Kepala Desa',
+    note: note,
+    previousTotal: prevNominal,
+    newTotal: item.total,
+    date: new Date().toISOString()
+  };
+
+  syncToCloud(submissions);
+  renderAllViews();
+  closeKadesReviseModal();
+
+  showToast(`Pagu berkas ${item.regNo} disesuaikan oleh Kades menjadi ${formatRupiah(item.total)}!`);
+}
+
+function acceptKadesRevision(id) {
+  const item = submissions.find(s => s.id === id);
+  if (!item) return;
+
+  if (confirm(`Apakah Pelaksana Kegiatan (PKA) menyetujui penyesuaian pagu menjadi ${formatRupiah(item.total)}?
+
+Status berkas akan ditingkatkan menjadi "SPP Terbit (Siap Tarik)" untuk proses pencairan.`)) {
+    item.status = 'SPP_TERBIT';
+    syncToCloud(submissions);
+    renderAllViews();
+    showToast(`Penyesuaian disetujui! Status berkas kini: SPP Terbit (Siap Tarik).`);
+  }
 }

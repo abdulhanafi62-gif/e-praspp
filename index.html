@@ -599,6 +599,17 @@
           <strong>Terbilang: </strong> <span id="docTerbilangText">Nol Rupiah</span>
         </div>
 
+        <!-- KOTAK CATATAN RESMI KOREKSI KADES (JIKA ADA PENYESUAIAN PAGU) -->
+        <div class="doc-revision-box" id="docRevisionBox" style="display: none;">
+          <div class="doc-revision-header">
+            <i class="fa-solid fa-pen-ruler"></i> CATATAN KOREKSI / PENYESUAIAN PAGU OLEH KEPALA DESA (PKPKD):
+          </div>
+          <p class="doc-revision-note" id="docRevisionNoteText">-</p>
+          <div class="doc-revision-meta" id="docRevisionMetaText">
+            Pagu semula yang diajukan PKA: Rp 0 &bull; Disesuaikan Kepala Desa: Rp 0
+          </div>
+        </div>
+
         <!-- KLAUSUL TANGGUNG JAWAB & PERLINDUNGAN HUKUM PKA -->
         <div class="doc-commitment-box">
           <p class="doc-disclaimer" id="docDisclaimerText" style="margin-bottom: 0;">
@@ -915,6 +926,71 @@
             <button type="button" class="btn btn-secondary" onclick="closeDisburseSetupModal()">Batal</button>
             <button type="submit" class="btn btn-primary">
               <i class="fa-solid fa-receipt"></i> Simpan & Cetak Kuitansi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PENYESUAIAN / REVISI PAGU OLEH KEPALA DESA (PKPKD) -->
+  <div id="kadesReviseModal" class="print-modal-backdrop no-print">
+    <div class="print-modal-container" style="max-width: 580px; margin-top: 25px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="header-icon bg-gold">
+            <i class="fa-solid fa-pen-ruler"></i>
+          </div>
+          <div>
+            <h2>Koreksi & Penyesuaian Pagu oleh Kepala Desa</h2>
+            <p class="subtitle">Catat perubahan pagu anggaran beserta alasan resmi PKPKD</p>
+          </div>
+        </div>
+
+        <form id="kadesReviseForm" onsubmit="event.preventDefault(); saveKadesRevision();">
+          <input type="hidden" id="reviseSubId">
+
+          <!-- Ringkasan Berkas -->
+          <div class="revise-summary-box">
+            <div class="rev-row">
+              <span class="rev-label">No. Berkas:</span>
+              <strong id="reviseRegNo" class="rev-value">-</strong>
+            </div>
+            <div class="rev-row">
+              <span class="rev-label">Pelaksana (PKA):</span>
+              <strong id="revisePka" class="rev-value">-</strong>
+            </div>
+            <div class="rev-row">
+              <span class="rev-label">Total Pagu Semula:</span>
+              <span id="reviseOriginalTotal" class="rev-original-badge">Rp 0</span>
+            </div>
+          </div>
+
+          <!-- Rincian Pagu per Kegiatan -->
+          <div class="form-group" style="margin-top: 14px;">
+            <label><i class="fa-solid fa-list-check"></i> Penyesuaian Pagu per Kegiatan (Rp): <span class="req">*</span></label>
+            <p class="section-help" style="margin-bottom: 8px;">Ubah nominal anggaran kegiatan yang disetujui:</p>
+            <div id="reviseActivitiesContainer" class="revise-activities-list">
+              <!-- Dynamically populated activity rows -->
+            </div>
+          </div>
+
+          <!-- Total Setelah Penyesuaian -->
+          <div class="total-row-revise">
+            <span>Total Pagu Baru Disetujui Kades:</span>
+            <strong id="reviseNewTotalDisplay">Rp 0</strong>
+          </div>
+
+          <!-- Catatan / Alasan Resmi Kades -->
+          <div class="form-group" style="margin-top: 14px;">
+            <label for="kadesRevisionNote"><i class="fa-solid fa-comment-dots"></i> Catatan & Alasan Penyesuaian Kepala Desa: <span class="req">*</span></label>
+            <textarea id="kadesRevisionNote" rows="3" required placeholder="Tuliskan alasan penyesuaian pagu (misal: penyesuaian ketersediaan kas ADD Tahap 2, pengurangan volume fisik, dialihkan ke kegiatan lain)..."></textarea>
+          </div>
+
+          <div class="form-actions space-between" style="margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" onclick="closeKadesReviseModal()">Batal</button>
+            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+              <i class="fa-solid fa-check-double"></i> Simpan Penyesuaian Kades
             </button>
           </div>
         </form>
