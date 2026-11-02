@@ -1,4 +1,4 @@
-const CACHE_NAME = 'epraspp-tm-v9';
+const CACHE_NAME = 'epraspp-tm-v9.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -1008,7 +1008,7 @@ function openPrintModal(item) {
 
       document.getElementById('docRevisionMetaText').innerHTML = 
 
-        `Pagu semula yang diajukan PKA: <strong>${formatRupiah(prevNominal)}</strong> &bull; Disesuaikan & Disetujui Kepala Desa (PKPKD): <strong>${formatRupiah(item.total)}</strong>`;
+        `Pagu semula yang diajukan: <strong>${formatRupiah(prevNominal)}</strong> &bull; Setelah Revisi: <strong>${formatRupiah(item.total)}</strong>`;
 
     } else {
 
@@ -1848,11 +1848,11 @@ async function shareToWhatsApp() {
 
 `
 
-*CATATAN KOREKSI KEPALA DESA (PKPKD):*
+*CATATAN REVISI:*
 
 "${s.revision.note}"
 
-*Pagu Semula Diajukan:* ${formatRupiah(s.originalTotal || s.revision.previousTotal || s.total)} ➔ *Disetujui Kades:* ${formatRupiah(s.total)}
+*Pagu Semula Diajukan:* ${formatRupiah(s.originalTotal || s.revision.previousTotal || s.total)} ➔ *Setelah Revisi:* ${formatRupiah(s.total)}
 
 `;
 
@@ -2188,7 +2188,7 @@ function renderSubmissionsList() {
 
           <i class="fa-solid fa-triangle-exclamation"></i>
 
-          <span>Catatan Koreksi Kepala Desa (PKPKD):</span>
+          <span>Catatan Revisi:</span>
 
         </div>
 
@@ -2200,7 +2200,7 @@ function renderSubmissionsList() {
 
           <i class="fa-solid fa-arrow-right"></i>
 
-          <span class="new-pagu">Disetujui: ${formatRupiah(item.total)}</span>
+          <span class="new-pagu">Revisi: ${formatRupiah(item.total)}</span>
 
         </div>
 
@@ -2214,7 +2214,7 @@ function renderSubmissionsList() {
 
       <button class="btn btn-sm btn-outline text-gold" onclick="openKadesReviseModal('${item.id}')" title="Koreksi / Penyesuaian Pagu oleh Kepala Desa">
 
-        <i class="fa-solid fa-pen-ruler"></i> Revisi Kades
+        <i class="fa-solid fa-pen-ruler"></i> Revisi
 
       </button>
 
@@ -2584,7 +2584,7 @@ function renderKaurRekap() {
 
               <button class="btn btn-sm btn-outline text-gold" onclick="openKadesReviseModal('${item.id}')" title="Koreksi / Penyesuaian Pagu Kepala Desa">
 
-                <i class="fa-solid fa-pen-ruler"></i> Revisi Kades
+                <i class="fa-solid fa-pen-ruler"></i> Revisi
 
               </button>
 
@@ -2980,7 +2980,7 @@ function getStatusBadge(status) {
 
     case 'DIREVISI_KADES':
 
-      return { class: 'badge-revised', label: 'Direvisi Kades (Penyesuaian Pagu)' };
+      return { class: 'badge-revised', label: 'Revisi' };
 
     case 'SPP_TERBIT':
 
@@ -3282,7 +3282,7 @@ function saveKadesRevision() {
 
 
 
-  showToast(`Pagu berkas ${item.regNo} disesuaikan oleh Kades menjadi ${formatRupiah(item.total)}!`);
+  showToast(`Pagu berkas ${item.regNo} berhasil direvisi menjadi ${formatRupiah(item.total)}!`);
 
 }
 
