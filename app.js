@@ -2118,28 +2118,25 @@ function renderDashboard() {
     }
   });
 
-  // Fallback realistic defaults if no data yet
-  if (totalPagu === 0 && submissions.length > 0) totalPagu = 25000000;
-
   // Update Metric Card 1: Total Pagu
   const totalPaguEl = document.getElementById('dashTotalPagu');
   if (totalPaguEl) totalPaguEl.textContent = formatRupiah(totalPagu);
   const paguCountEl = document.getElementById('dashPaguCount');
   if (paguCountEl) paguCountEl.textContent = `${submissions.length} Berkas`;
 
-  // Update Metric Card 2: Pagu Disetujui
-  const paguDisetujuiEl = document.getElementById('dashPaguDisetujui');
-  if (paguDisetujuiEl) paguDisetujuiEl.textContent = formatRupiah(paguDisetujui || (totalPagu * 0.7));
-  const paguDisetujuiCountEl = document.getElementById('dashPaguDisetujuiCount');
+  // Update Metric Card 2: Pagu Disetujui (SPP)
   const countDisetujui = submissions.filter(s => s.status === 'SPP_TERBIT' || s.status === 'SELESAI_CAIR').length;
-  if (paguDisetujuiCountEl) paguDisetujuiCountEl.textContent = `${countDisetujui || 1} Terbit SPP`;
+  const paguDisetujuiEl = document.getElementById('dashPaguDisetujui');
+  if (paguDisetujuiEl) paguDisetujuiEl.textContent = formatRupiah(paguDisetujui);
+  const paguDisetujuiCountEl = document.getElementById('dashPaguDisetujuiCount');
+  if (paguDisetujuiCountEl) paguDisetujuiCountEl.textContent = `${countDisetujui} Terbit SPP`;
 
-  // Update Metric Card 3: Kas Diserahkan
-  const kasDiserahkanEl = document.getElementById('dashKasDiserahkan');
-  if (kasDiserahkanEl) kasDiserahkanEl.textContent = formatRupiah(kasDiserahkan || (totalPagu * 0.5));
+  // Update Metric Card 3: Kas Diserahkan (Kuitansi)
   const countCair = submissions.filter(s => s.status === 'SELESAI_CAIR' || s.disbursement).length;
+  const kasDiserahkanEl = document.getElementById('dashKasDiserahkan');
+  if (kasDiserahkanEl) kasDiserahkanEl.textContent = formatRupiah(kasDiserahkan);
   const kasCountEl = document.getElementById('dashKasDiserahkanCount');
-  if (kasCountEl) kasCountEl.textContent = `${countCair || 1} Kuitansi Riil`;
+  if (kasCountEl) kasCountEl.textContent = `${countCair} Kuitansi Riil`;
 
   // Update Metric Card 4: Perlu Revisi / Menunggu
   const statRevisedValEl = document.getElementById('dashStatRevisedVal');
@@ -2158,8 +2155,12 @@ function renderDashboard() {
   const centerTotalEl = document.getElementById('dashDonutCenterTotal');
   
   if (centerTotalEl) {
-    const jt = Math.round(totalPagu / 1000000);
-    centerTotalEl.textContent = `Rp ${jt} Jt`;
+    if (totalPagu === 0) {
+      centerTotalEl.textContent = 'Rp 0';
+    } else {
+      const jt = Math.round(totalPagu / 1000000);
+      centerTotalEl.textContent = `Rp ${jt} Jt`;
+    }
   }
 
   // Pre-configured village budget categories (Permendagri No. 20/2018)
@@ -2178,43 +2179,53 @@ function renderDashboard() {
           <span class="legend-name">${cat.name}</span>
         </div>
         <div class="legend-right">
-          <span class="legend-amount">${formatRupiah(cat.amount)}</span>
-          <span class="legend-percent">${cat.percent}%</span>
+          <span class="legend-amount">${totalPagu > 0 ? formatRupiah(cat.amount) : 'Rp 0'}</span>
+          <span class="legend-percent">${totalPagu > 0 ? cat.percent + '%' : '0%'}</span>
         </div>
       </div>
     `).join('');
   }
 
   if (donutSvg) {
-    let cumulative = 0;
-    const slices = categories.map(cat => {
-      const startAngle = cumulative * 3.6;
-      const endAngle = (cumulative + cat.percent) * 3.6;
-      cumulative += cat.percent;
+    if (totalPagu === 0) {
+      // Empty grey donut ring when 0
+      donutSvg.innerHTML = `
+        <g>
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#e2e8f0" stroke-width="24" />
+          <circle cx="100" cy="100" r="48" fill="#ffffff" />
+        </g>
+      `;
+    } else {
+      let cumulative = 0;
+      const slices = categories.map(cat => {
+        const startAngle = cumulative * 3.6;
+        const endAngle = (cumulative + cat.percent) * 3.6;
+        cumulative += cat.percent;
 
-      const r = 70;
-      const cx = 100;
-      const cy = 100;
-      const startRad = (startAngle - 90) * Math.PI / 180;
-      const endRad = (endAngle - 90) * Math.PI / 180;
+        const r = 70;
+        const cx = 100;
+        const cy = 100;
+        const startRad = (startAngle - 90) * Math.PI / 180;
+        const endRad = (endAngle - 90) * Math.PI / 180;
 
-      const x1 = cx + r * Math.cos(startRad);
-      const y1 = cy + r * Math.sin(startRad);
-      const x2 = cx + r * Math.cos(endRad);
-      const y2 = cy + r * Math.sin(endRad);
+        const x1 = cx + r * Math.cos(startRad);
+        const y1 = cy + r * Math.sin(startRad);
+        const x2 = cx + r * Math.cos(endRad);
+        const y2 = cy + r * Math.sin(endRad);
 
-      const largeArc = cat.percent > 50 ? 1 : 0;
-      const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+        const largeArc = cat.percent > 50 ? 1 : 0;
+        const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 
-      return `<path d="${pathData}" fill="${cat.color}" opacity="0.95" stroke="#ffffff" stroke-width="3" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));" />`;
-    }).join('');
+        return `<path d="${pathData}" fill="${cat.color}" opacity="0.95" stroke="#ffffff" stroke-width="3" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));" />`;
+      }).join('');
 
-    donutSvg.innerHTML = `
-      <g>
-        ${slices}
-        <circle cx="100" cy="100" r="48" fill="#ffffff" />
-      </g>
-    `;
+      donutSvg.innerHTML = `
+        <g>
+          ${slices}
+          <circle cx="100" cy="100" r="48" fill="#ffffff" />
+        </g>
+      `;
+    }
   }
 
   // 3. RENDER RECENT SUBMISSIONS FEED
@@ -2286,304 +2297,62 @@ function renderDashboard() {
       }).join('');
     }
   }
-}
 
-function escapeHtml(text) {
-
-  if (!text) return '';
-
-  return text
-
-    .replace(/&/g, "&amp;")
-
-    .replace(/</g, "&lt;")
-
-    .replace(/>/g, "&gt;")
-
-    .replace(/"/g, "&quot;")
-
-    .replace(/'/g, "&#039;");
-
-}
-
-
-
-// Indonesian Terbilang Algorithm
-
-function terbilang(n) {
-
-  n = Math.floor(Math.abs(n));
-
-  const words = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
-
-  
-
-  if (n < 12) return words[n];
-
-  if (n < 20) return terbilang(n - 10) + ' Belas';
-
-  if (n < 100) return terbilang(Math.floor(n / 10)) + ' Puluh ' + words[n % 10];
-
-  if (n < 200) return 'Seratus ' + terbilang(n - 100);
-
-  if (n < 1000) return terbilang(Math.floor(n / 100)) + ' Ratus ' + terbilang(n % 100);
-
-  if (n < 2000) return 'Seribu ' + terbilang(n - 1000);
-
-  if (n < 1000000) return terbilang(Math.floor(n / 1000)) + ' Ribu ' + terbilang(n % 1000);
-
-  if (n < 1000000000) return terbilang(Math.floor(n / 1000000)) + ' Juta ' + terbilang(n % 1000000);
-
-  if (n < 1000000000000) return terbilang(Math.floor(n / 1000000000)) + ' Milyar ' + terbilang(n % 1000000000);
-
-  return '';
-
-}
-
-
-
-
-
-// ============================================================================
-
-// KOREKSI & PENYESUAIAN PAGU OLEH KEPALA DESA (PKPKD)
-
-// ============================================================================
-
-let currentReviseItem = null;
-
-
-
-function openKadesReviseModal(id) {
-
-  const item = submissions.find(s => s.id === id);
-
-  if (!item) return;
-
-
-
-  currentReviseItem = item;
-
-  document.getElementById('reviseSubId').value = item.id;
-
-  document.getElementById('reviseRegNo').textContent = item.regNo || '-';
-
-  document.getElementById('revisePka').textContent = `${item.pkaRole} (${item.pkaName})`;
-
-  
-
-  const origTotal = item.originalTotal || (item.revision ? item.revision.previousTotal : item.total);
-
-  document.getElementById('reviseOriginalTotal').textContent = formatRupiah(origTotal);
-
-  document.getElementById('kadesRevisionNote').value = item.revision ? item.revision.note : '';
-
-
-
-  // Render Kegiatan Inputs
-
-  const container = document.getElementById('reviseActivitiesContainer');
-
-  container.innerHTML = '';
-
-
-
-  item.activities.forEach((act, idx) => {
-
-    const row = document.createElement('div');
-
-    row.className = 'revise-activity-item';
-
-    row.innerHTML = `
-
-      <div class="revise-activity-name">
-
-        <span>${idx + 1}. ${escapeHtml(act.name)}</span>
-
-      </div>
-
-      <div>
-
-        <input type="number" 
-
-               id="reviseActAmount_${idx}" 
-
-               class="revise-activity-input" 
-
-               value="${act.amount}" 
-
-               min="0" 
-
-               step="50000"
-
-               oninput="calculateReviseTotal()">
-
-      </div>
-
-    `;
-
-    container.appendChild(row);
-
-  });
-
-
-
-  calculateReviseTotal();
-
-  document.getElementById('kadesReviseModal').classList.add('open');
-
-}
-
-
-
-function closeKadesReviseModal() {
-
-  const modal = document.getElementById('kadesReviseModal');
-
-  if (modal) modal.classList.remove('open');
-
-  currentReviseItem = null;
-
-}
-
-
-
-function calculateReviseTotal() {
-
-  if (!currentReviseItem) return;
-
-  let sum = 0;
-
-  currentReviseItem.activities.forEach((_, idx) => {
-
-    const inp = document.getElementById(`reviseActAmount_${idx}`);
-
-    if (inp) {
-
-      sum += parseInt(inp.value, 10) || 0;
-
-    }
-
-  });
-
-  document.getElementById('reviseNewTotalDisplay').textContent = formatRupiah(sum);
-
-}
-
-
-
-function saveKadesRevision() {
-
-  const id = document.getElementById('reviseSubId').value;
-
-  const item = submissions.find(s => s.id === id);
-
-  if (!item) return;
-
-
-
-  const note = document.getElementById('kadesRevisionNote').value.trim();
-
-  if (!note) {
-
-    alert('Mohon isi alasan / catatan penyesuaian pagu oleh Kepala Desa!');
-
-    return;
-
+  // 4. RENDER TAHAPAN PENYERAPAN ANGGARAN (DINAMIS 100% SESUAI REALISASI KAS)
+  const goalsBox = document.getElementById('dashGoalsProgress');
+  if (goalsBox) {
+    const stageConfigs = [
+      {
+        name: 'Alokasi Dana Desa (ADD) Tahap 1',
+        match: s => s.fundStage && s.fundStage.includes('ADD') && s.fundStage.includes('Tahap 1'),
+        gradient: 'linear-gradient(90deg, #6366f1, #8b5cf6)'
+      },
+      {
+        name: 'Alokasi Dana Desa (ADD) Tahap 2',
+        match: s => s.fundStage && s.fundStage.includes('ADD') && s.fundStage.includes('Tahap 2'),
+        gradient: 'linear-gradient(90deg, #10b981, #34d399)'
+      },
+      {
+        name: 'Dana Desa (DDS) Tahap 1',
+        match: s => s.fundStage && s.fundStage.includes('DDS') && s.fundStage.includes('Tahap 1'),
+        gradient: 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+      }
+    ];
+
+    goalsBox.innerHTML = stageConfigs.map(cfg => {
+      let stageDisbursed = 0;
+      let stageTotal = 0;
+
+      submissions.filter(cfg.match).forEach(s => {
+        const nominal = Number(s.total || 0);
+        stageTotal += nominal;
+        if (s.status === 'SELESAI_CAIR' || s.disbursement) {
+          stageDisbursed += Number(s.disbursement?.amountDisbursed || nominal);
+        }
+      });
+
+      // Jika belum ada penarikan kas/pencairan di tahap ini, default 0%
+      const percent = stageTotal > 0 ? Math.round((stageDisbursed / stageTotal) * 100) : 0;
+      const textAmounts = stageTotal > 0
+        ? `${formatRupiah(stageDisbursed)} / ${formatRupiah(stageTotal)} (${percent}%)`
+        : `Rp 0 (0%)`;
+
+      return `
+        <div class="goal-progress-item">
+          <div class="goal-top-row">
+            <span>${cfg.name}</span>
+            <span class="goal-amounts">${textAmounts}</span>
+          </div>
+          <div class="clay-progress-track">
+            <div class="clay-progress-fill" style="width: ${percent}%; background: ${cfg.gradient};"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
-
-
-
-  // Simpan pagu awal jika belum pernah disimpan
-
-  if (!item.originalTotal) {
-
-    item.originalTotal = item.total;
-
-  }
-
-  const prevNominal = item.total;
-
-
-
-  // Update nilai kegiatan
-
-  item.activities.forEach((act, idx) => {
-
-    const inp = document.getElementById(`reviseActAmount_${idx}`);
-
-    if (inp) {
-
-      act.amount = parseInt(inp.value, 10) || 0;
-
-    }
-
-  });
-
-
-
-  item.total = item.activities.reduce((acc, a) => acc + a.amount, 0);
-
-  item.status = 'DIREVISI_KADES';
-
-  item.revision = {
-
-    revisedBy: activeSettings.kadesName || 'Kepala Desa',
-
-    note: note,
-
-    previousTotal: prevNominal,
-
-    newTotal: item.total,
-
-    date: new Date().toISOString()
-
-  };
-
-
-
-  syncToCloud(submissions);
-
-  renderAllViews();
-
-  closeKadesReviseModal();
-
-
-
-  showToast(`Pagu berkas ${item.regNo} berhasil direvisi menjadi ${formatRupiah(item.total)}!`);
-
 }
 
 
-
-function acceptKadesRevision(id) {
-
-  const item = submissions.find(s => s.id === id);
-
-  if (!item) return;
-
-
-
-  if (confirm(`Apakah Pelaksana Kegiatan (PKA) menyetujui penyesuaian pagu menjadi ${formatRupiah(item.total)}?
-
-
-
-Status berkas akan ditingkatkan menjadi "SPP Terbit (Siap Tarik)" untuk proses pencairan.`)) {
-
-    item.status = 'SPP_TERBIT';
-
-    syncToCloud(submissions);
-
-    renderAllViews();
-
-    showToast(`Penyesuaian disetujui! Status berkas kini: SPP Terbit (Siap Tarik).`);
-
-  }
-
-}
-
-
-// RESTORED VIEW FUNCTIONS
 function renderAllViews() {
   renderDashboard();
   renderSubmissionsList();
