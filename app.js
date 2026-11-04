@@ -48,109 +48,73 @@ let activeSettings = {
 
 
 
-// Initial Samples
+// Initial Samples (Murni kosong untuk lingkungan riil desa)
+const sampleInitialData = [];
 
-const sampleInitialData = [
+// ============================================================================
+// CORE UTILITY FUNCTIONS (ESCAPE HTML, TERBILANG, SIDEBAR, ETC)
+// ============================================================================
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
-  {
+function terbilang(n) {
+  n = Math.floor(Math.abs(Number(n) || 0));
+  if (n === 0) return 'Nol';
 
-    id: 'sub-' + Date.now(),
+  const bil = (val) => {
+    val = Math.floor(Math.abs(val || 0));
+    const words = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+    if (val < 12) return words[val];
+    if (val < 20) return (bil(val - 10) + ' Belas').trim();
+    if (val < 100) return (bil(Math.floor(val / 10)) + ' Puluh ' + (val % 10 !== 0 ? words[val % 10] : '')).trim();
+    if (val < 200) return ('Seratus ' + (val - 100 !== 0 ? bil(val - 100) : '')).trim();
+    if (val < 1000) return (bil(Math.floor(val / 100)) + ' Ratus ' + (val % 100 !== 0 ? bil(val % 100) : '')).trim();
+    if (val < 2000) return ('Seribu ' + (val - 1000 !== 0 ? bil(val - 1000) : '')).trim();
+    if (val < 1000000) return (bil(Math.floor(val / 1000)) + ' Ribu ' + (val % 1000 !== 0 ? bil(val % 1000) : '')).trim();
+    if (val < 1000000000) return (bil(Math.floor(val / 1000000)) + ' Juta ' + (val % 1000000 !== 0 ? bil(val % 1000000) : '')).trim();
+    if (val < 1000000000000) return (bil(Math.floor(val / 1000000000)) + ' Milyar ' + (val % 1000000000 !== 0 ? bil(val % 1000000000) : '')).trim();
+    return '';
+  };
 
-    regNo: '001/PRA-SPP/TM/X/2026',
+  return bil(n);
+}
 
-    date: new Date().toISOString().split('T')[0],
+function toggleSidebarMenu() {
+  const sidebar = document.getElementById('fintrackSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('open');
+}
 
-    pkaRole: 'Kasi Kesejahteraan',
+function closeSidebarMenu() {
+  const sidebar = document.getElementById('fintrackSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+}
 
-    pkaName: 'Pelaksana Kesejahteraan',
-
-    fundStage: 'ADD (Alokasi Dana Desa) - Tahap 2',
-
-    activities: [
-
-      {
-
-        name: 'Pembangunan Pos Kamling RT 01 Dusun Manis',
-
-        amount: 15000000
-
-      },
-
-      {
-
-        name: 'Pemeliharaan Saluran Drainase Lingkungan RT 02',
-
-        amount: 10000000
-
-      }
-
-    ],
-
-    total: 25000000,
-
-    status: 'SPP_TERBIT',
-
-    disbursement: null // Will store receipt details when money is disbursed
-
-  },
-
-  {
-
-    id: 'sub-' + (Date.now() - 10000),
-
-    regNo: '002/PRA-SPP/TM/X/2026',
-
-    date: new Date().toISOString().split('T')[0],
-
-    pkaRole: 'Kaur Umum & Perencanaan',
-
-    pkaName: 'Pelaksana Umum & Perencanaan',
-
-    fundStage: 'ADD (Alokasi Dana Desa) - Tahap 2',
-
-    activities: [
-
-      {
-
-        name: 'Pembelanjaan ATK dan Kebutuhan Kantor Desa',
-
-        amount: 7500000
-
-      },
-
-      {
-
-        name: 'Pemeliharaan Gedung Kantor Desa',
-
-        amount: 5000000
-
-      }
-
-    ],
-
-    total: 12500000,
-
-    status: 'DANA_CAIR',
-
-    disbursement: {
-
-      receiptNo: 'KW-001/KAS/TM/X/2026',
-
-      receiverType: 'PKA',
-
-      receiverName: 'Pelaksana Umum & Perencanaan',
-
-      receiverRole: 'Kaur Umum & Perencanaan',
-
-      date: new Date().toISOString().split('T')[0],
-
-      amount: 12500000
-
-    }
-
+function filterSubmissionsQuick(val) {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.value = val || '';
+  if (val && val.trim().length > 0) {
+    switchView('view-list');
   }
+  filterSubmissions();
+}
 
-];
+function loadAllSubmissions(force) {
+  loadSubmissionsFromLocal();
+  renderAllViews();
+  showToast('Data pengajuan berhasil diperbarui.');
+}
+
 
 
 
@@ -423,32 +387,19 @@ function syncToCloud(dataList) {
 // Local Storage Handlers
 
 function loadSubmissionsFromLocal() {
-
   const stored = localStorage.getItem('epraspp_submissions_v5_tm');
-
   if (stored) {
-
     try {
-
-      submissions = JSON.parse(stored);
-
+      submissions = JSON.parse(stored) || [];
     } catch (e) {
-
-      submissions = sampleInitialData;
-
+      submissions = [];
     }
-
   } else {
-
-    submissions = sampleInitialData;
-
+    // Awal murni kosong
+    submissions = [];
     saveSubmissionsToLocalOnly();
-
   }
-
 }
-
-
 
 function saveSubmissionsToLocalOnly() {
 
@@ -663,77 +614,45 @@ function handlePkaChange() {
 // ============================================================================
 
 function initActivityRows() {
-
   const container = document.getElementById('activitiesContainer');
-
   if (!container) return;
-
   container.innerHTML = '';
-
-  addActivityRow('Pembangunan Pos Kamling RT 01', 0);
-
-  addActivityRow('Pemeliharaan Saluran Air Bersih', 0);
-
+  // Awali dengan 1 baris input bersih kosong agar langsung dapat diketik
+  addActivityRow('', '');
 }
 
 
 
-function addActivityRow(name = '', amount = 0) {
-
+function addActivityRow(name = '', amount = '') {
   const container = document.getElementById('activitiesContainer');
-
+  if (!container) return;
   const rowId = 'act-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-
   
-
   const div = document.createElement('div');
-
   div.className = 'activity-input-card';
-
   div.id = rowId;
-
+  const numVal = amount !== '' && amount !== null && amount !== undefined ? Number(amount) : '';
   div.innerHTML = `
-
     <div class="activity-card-body">
-
       <div class="form-group" style="margin-bottom: 8px;">
-
         <label><i class="fa-solid fa-file-lines"></i> Nama / Judul Kegiatan yang Akan Dilaksanakan:</label>
-
         <input type="text" class="act-name" placeholder="Contoh: Pembangunan Pos Kamling / Pembelanjaan ATK / Siltap Kades" value="${escapeHtml(name)}" required>
-
       </div>
-
       <div class="form-row" style="align-items: flex-end;">
-
         <div class="form-group flex-1" style="margin-bottom: 0;">
-
           <label><i class="fa-solid fa-money-bill-wave"></i> Jumlah Pagu Anggaran (Rp):</label>
-
-          <input type="number" class="act-amount" min="0" step="any" placeholder="0" value="${amount > 0 ? amount : ''}" required oninput="calculateFormTotal()">
-
+          <input type="number" class="act-amount" min="0" step="any" placeholder="0" value="${numVal !== '' && numVal > 0 ? numVal : ''}" required oninput="calculateFormTotal()">
         </div>
-
         <div class="form-group" style="margin-bottom: 0;">
-
           <button type="button" class="btn-remove-row" title="Hapus Kegiatan" onclick="removeActivityRow('${rowId}')">
-
             <i class="fa-solid fa-trash-can"></i>
-
           </button>
-
         </div>
-
       </div>
-
     </div>
-
   `;
-
   container.appendChild(div);
-
   calculateFormTotal();
-
 }
 
 
@@ -2717,3 +2636,122 @@ function showToast(msg) {
   }, 2800);
 }
 
+
+
+// ============================================================================
+// KOREKSI & PENYESUAIAN PAGU OLEH KEPALA DESA (PKPKD)
+// ============================================================================
+let currentReviseItem = null;
+
+function openKadesReviseModal(id) {
+  const item = submissions.find(s => s.id === id);
+  if (!item) return;
+
+  currentReviseItem = item;
+  document.getElementById('reviseSubId').value = item.id;
+  document.getElementById('reviseRegNo').textContent = item.regNo || '-';
+  document.getElementById('revisePka').textContent = `${item.pkaRole} (${item.pkaName})`;
+  
+  const origTotal = item.originalTotal || (item.revision ? item.revision.previousTotal : item.total);
+  document.getElementById('reviseOriginalTotal').textContent = formatRupiah(origTotal);
+  document.getElementById('kadesRevisionNote').value = item.revision ? item.revision.note : '';
+
+  // Render Kegiatan Inputs
+  const container = document.getElementById('reviseActivitiesContainer');
+  if (container) {
+    container.innerHTML = '';
+    item.activities.forEach((act, idx) => {
+      const row = document.createElement('div');
+      row.className = 'revise-activity-item';
+      row.innerHTML = `
+        <div class="revise-activity-name">
+          <span>${idx + 1}. ${escapeHtml(act.name)}</span>
+        </div>
+        <div>
+          <input type="number" 
+                 id="reviseActAmount_${idx}" 
+                 class="revise-activity-input" 
+                 value="${act.amount}" 
+                 min="0" 
+                 step="50000"
+                 oninput="calculateReviseTotal()">
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  calculateReviseTotal();
+  const modal = document.getElementById('kadesReviseModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeKadesReviseModal() {
+  const modal = document.getElementById('kadesReviseModal');
+  if (modal) modal.classList.remove('open');
+  currentReviseItem = null;
+}
+
+function calculateReviseTotal() {
+  if (!currentReviseItem) return;
+  let sum = 0;
+  currentReviseItem.activities.forEach((_, idx) => {
+    const inp = document.getElementById(`reviseActAmount_${idx}`);
+    if (inp) {
+      sum += parseInt(inp.value, 10) || 0;
+    }
+  });
+  const disp = document.getElementById('reviseNewTotalDisplay');
+  if (disp) disp.textContent = formatRupiah(sum);
+}
+
+function saveKadesRevision() {
+  const id = document.getElementById('reviseSubId').value;
+  const item = submissions.find(s => s.id === id);
+  if (!item) return;
+
+  const note = document.getElementById('kadesRevisionNote').value.trim();
+  if (!note) {
+    alert('Mohon isi alasan / catatan penyesuaian pagu oleh Kepala Desa!');
+    return;
+  }
+
+  if (!item.originalTotal) {
+    item.originalTotal = item.total;
+  }
+  const prevNominal = item.total;
+
+  item.activities.forEach((act, idx) => {
+    const inp = document.getElementById(`reviseActAmount_${idx}`);
+    if (inp) {
+      act.amount = parseInt(inp.value, 10) || 0;
+    }
+  });
+
+  item.total = item.activities.reduce((acc, a) => acc + a.amount, 0);
+  item.status = 'DIREVISI_KADES';
+  item.revision = {
+    revisedBy: activeSettings.kadesName || 'Kepala Desa',
+    note: note,
+    previousTotal: prevNominal,
+    newTotal: item.total,
+    date: new Date().toISOString()
+  };
+
+  syncToCloud(submissions);
+  renderAllViews();
+  closeKadesReviseModal();
+  showToast('Catatan & penyesuaian pagu oleh Kades berhasil disimpan!');
+}
+
+function acceptKadesRevision(id) {
+  const item = submissions.find(s => s.id === id);
+  if (!item) return;
+
+  if (confirm(`Apakah Pelaksana Kegiatan (PKA) menyetujui penyesuaian pagu menjadi ${formatRupiah(item.total)}?\n\nStatus berkas akan ditingkatkan menjadi "SPP Terbit (Siap Tarik)" untuk proses pencairan.`)) {
+    item.status = 'SPP_TERBIT';
+    syncToCloud(submissions);
+    renderAllViews();
+    showToast(`Penyesuaian disetujui! Status berkas kini: SPP Terbit (Siap Tarik).`);
+  }
+}
