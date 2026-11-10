@@ -50,7 +50,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="style.css?v=13.0">
+  <link rel="stylesheet" href="style.css?v=14.0">
 
 
 
@@ -1137,6 +1137,9 @@
 
         <div class="actions-right">
 
+          <button class="btn btn-outline btn-sm" onclick="editFromPrintModal()" title="Edit Berkas Pengajuan Ini" style="background:#ffffff; color:#1d4ed8; border-color:#93c5fd; margin-right: 4px;">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Berkas
+          </button>
           <button class="btn btn-success btn-sm" onclick="shareToWhatsApp()" title="Bagikan file dokumen PDF ke WhatsApp">
 
             <i class="fa-brands fa-whatsapp"></i> Bagikan PDF ke WA
@@ -2113,6 +2116,117 @@
 
 
 
+  
+  <!-- ============================================================ -->
+  <!-- MODAL EDIT PENGAJUAN OLEH PKA / OPERATOR (EDIT KEGIATAN & PAGU) -->
+  <!-- ============================================================ -->
+  <div id="editSubmissionModal" class="print-modal-backdrop no-print">
+    <div class="print-modal-container" style="max-width: 680px; margin-top: 20px;">
+      <div class="card" style="box-shadow: 0 20px 40px rgba(0,0,0,0.22); border-radius: 16px;">
+        <div class="card-header" style="border-bottom: 1px solid var(--border); padding-bottom: 14px; display: flex; align-items: center; gap: 12px;">
+          <div class="header-icon bg-blue" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white;">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div style="flex: 1;">
+            <h2 style="font-size: 1.2rem; margin: 0; color: #1e293b;">Edit Pengajuan Kegiatan (Pra-SPP)</h2>
+            <p class="subtitle" style="margin: 2px 0 0 0; font-size: 0.85rem; color: #64748b;">Perbaiki data pelaksana atau tambah / sesuaikan rincian kegiatan</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeEditSubmissionModal()" title="Tutup Modal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="editSubmissionForm" onsubmit="event.preventDefault(); saveEditedSubmission();" style="padding-top: 14px;">
+          <input type="hidden" id="editSubId">
+
+          <!-- Ringkasan Berkas -->
+          <div class="revise-summary-box" style="margin-bottom: 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 14px;">
+            <div class="rev-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="rev-label" style="font-weight: 600; color: #1e40af; font-size: 0.85rem;"><i class="fa-solid fa-hashtag"></i> No. Registrasi Berkas:</span>
+              <strong id="editRegNoDisplay" class="rev-value" style="font-family: monospace; font-size: 0.95rem; color: #1e3a8a;">-</strong>
+            </div>
+            <div class="rev-row" style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="rev-label" style="font-weight: 600; color: #1e40af; font-size: 0.85rem;"><i class="fa-solid fa-shield-halved"></i> Status Dokumen:</span>
+              <span id="editStatusBadgeDisplay" class="badge badge-printed">Draf</span>
+            </div>
+          </div>
+
+          <!-- Form Identitas PKA & Tahapan -->
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="editPkaRole"><i class="fa-solid fa-user-tie"></i> Jabatan Pelaksana Kegiatan (PKA) <span class="req">*</span></label>
+              <select id="editPkaRole" required onchange="handleEditPkaChange()">
+                <option value="Kasi Pemerintahan">Kasi Pemerintahan</option>
+                <option value="Kasi Kesejahteraan">Kasi Kesejahteraan</option>
+                <option value="Kasi Pelayanan">Kasi Pelayanan</option>
+                <option value="Kaur Umum & Perencanaan">Kaur Umum & Perencanaan</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="editPkaName"><i class="fa-solid fa-id-badge"></i> Nama Pejabat PKA <span class="req">*</span></label>
+              <input type="text" id="editPkaName" placeholder="Nama Lengkap Pejabat" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="editFundStage"><i class="fa-solid fa-layer-group"></i> Tahapan Pencairan & Sumber Dana <span class="req">*</span></label>
+              <select id="editFundStage" required>
+                <option value="ADD (Alokasi Dana Desa) - Tahap 1">ADD - Tahap 1</option>
+                <option value="ADD (Alokasi Dana Desa) - Tahap 2">ADD - Tahap 2</option>
+                <option value="ADD (Alokasi Dana Desa) - Tahap 3">ADD - Tahap 3</option>
+                <option value="DDS (Dana Desa) - Tahap 1">DDS (Dana Desa) - Tahap 1</option>
+                <option value="DDS (Dana Desa) - Tahap 2">DDS (Dana Desa) - Tahap 2</option>
+                <option value="PBH (Bagi Hasil Pajak & Retribusi)">PBH (Bagi Hasil Pajak & Retribusi)</option>
+                <option value="PADes (Pendapatan Asli Desa)">PADes (Pendapatan Asli Desa)</option>
+                <option value="BK-KAB (Bantuan Keuangan Kabupaten)">BK-KAB (Bantuan Keuangan Kab. Kutim)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="editSubDate"><i class="fa-solid fa-calendar-day"></i> Tanggal Pengajuan <span class="req">*</span></label>
+              <input type="date" id="editSubDate" required>
+            </div>
+          </div>
+
+          <!-- Section: Daftar Kegiatan & Pagu Anggaran -->
+          <div class="items-section" style="margin-top: 15px;">
+            <div class="items-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 style="font-size: 0.95rem; margin: 0;"><i class="fa-solid fa-list-check"></i> Daftar Kegiatan yang Akan Dilaksanakan</h3>
+              <button type="button" class="btn btn-sm btn-outline text-primary" onclick="addEditActivityRow('', '')">
+                <i class="fa-solid fa-plus"></i> Tambah Kegiatan
+              </button>
+            </div>
+            <p class="section-help" style="margin-bottom: 12px;">Anda dapat mengubah nama kegiatan, memperbaiki jumlah pagu, atau menambah kegiatan baru.</p>
+
+            <div class="activities-container" id="editActivitiesContainer">
+              <!-- Dynamic Activity Rows for Editing injected here -->
+            </div>
+
+            <!-- Total Box -->
+            <div class="total-summary-card">
+              <div class="total-row">
+                <span class="total-label">TOTAL PENGAJUAN DANA (SETELAH EDIT):</span>
+                <span class="total-value" id="editFormTotalDisplay">Rp 0</span>
+              </div>
+              <div class="terbilang-box" id="editFormTerbilangDisplay">
+                <em>Nol Rupiah</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Actions -->
+          <div class="modal-btn-row" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeEditSubmissionModal()">Batal</button>
+            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan & Pratinjau
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
   <!-- MODAL LIHAT FOTO BUKTI (ENLARGED) -->
 
   <div id="viewPhotoModal" class="print-modal-backdrop no-print">
@@ -2157,7 +2271,7 @@
 
   <!-- Scripts -->
 
-  <script src="app.js?v=13.0"></script>
+  <script src="app.js?v=14.0"></script>
 
 </body>
 

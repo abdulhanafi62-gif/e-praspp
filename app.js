@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDefaultDate();
 
   initActivityRows();
+  initEnterKeyPrevention();
 
   initCloudSync();
 
@@ -2338,6 +2339,9 @@ function renderSubmissionsList() {
           <div class="item-nominal">${formatRupiah(item.total)}</div>
           <div class="item-actions">
             ${receiptBtn}
+            <button class="btn btn-sm btn-outline text-primary" onclick="openEditSubmissionModal('${item.id}')" title="Edit Pengajuan & Tambah Kegiatan">
+              <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
             <button class="btn btn-sm btn-outline" onclick="openPrintModalById('${item.id}')" title="Cetak Surat Pengajuan PDF">
               <i class="fa-solid fa-file-pdf"></i> Surat SPP
             </button>
@@ -2754,4 +2758,256 @@ function acceptKadesRevision(id) {
     renderAllViews();
     showToast(`Penyesuaian disetujui! Status berkas kini: SPP Terbit (Siap Tarik).`);
   }
+}
+
+
+// ============================================================================
+// FITUR EDIT PENGAJUAN PKA & PENCEGAHAN SUBMIT ENTER ACCIDENTAL
+// ============================================================================
+
+function initEnterKeyPrevention() {
+  const forms = [
+    document.getElementById('submissionForm'),
+    document.getElementById('editSubmissionForm')
+  ];
+
+  forms.forEach(form => {
+    if (!form) return;
+    form.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const target = e.target;
+        if (target && target.tagName === 'INPUT') {
+          // Cegah form ter-submit secara prematur
+          e.preventDefault();
+
+          if (target.classList.contains('act-name')) {
+            const row = target.closest('.activity-input-card');
+            const amt = row ? row.querySelector('.act-amount') : null;
+            if (amt) amt.focus();
+          } else if (target.classList.contains('act-amount')) {
+            addActivityRow('', '');
+            const rows = document.querySelectorAll('#activitiesContainer .activity-input-card');
+            const lastRow = rows[rows.length - 1];
+            if (lastRow) {
+              const nextName = lastRow.querySelector('.act-name');
+              if (nextName) nextName.focus();
+            }
+          } else if (target.classList.contains('edit-act-name')) {
+            const row = target.closest('.activity-input-card');
+            const amt = row ? row.querySelector('.edit-act-amount') : null;
+            if (amt) amt.focus();
+          } else if (target.classList.contains('edit-act-amount')) {
+            addEditActivityRow('', '');
+            const rows = document.querySelectorAll('#editActivitiesContainer .activity-input-card');
+            const lastRow = rows[rows.length - 1];
+            if (lastRow) {
+              const nextName = lastRow.querySelector('.edit-act-name');
+              if (nextName) nextName.focus();
+            }
+          } else if (target.id === 'pkaName') {
+            const firstAct = document.querySelector('#activitiesContainer .act-name');
+            if (firstAct) firstAct.focus();
+          } else if (target.id === 'editPkaName') {
+            const firstAct = document.querySelector('#editActivitiesContainer .edit-act-name');
+            if (firstAct) firstAct.focus();
+          }
+          return false;
+        }
+      }
+    });
+  });
+}
+
+function editFromPrintModal() {
+  if (currentPreviewSubmission && currentPreviewSubmission.id) {
+    const id = currentPreviewSubmission.id;
+    closePrintModal();
+    openEditSubmissionModal(id);
+  }
+}
+
+function openEditSubmissionModal(id) {
+  const item = submissions.find(s => s.id === id);
+  if (!item) {
+    showToast('Data berkas pengajuan tidak ditemukan.');
+    return;
+  }
+
+  document.getElementById('editSubId').value = item.id;
+  document.getElementById('editRegNoDisplay').textContent = item.regNo || '-';
+
+  const badgeInfo = getStatusBadge(item.status);
+  const badgeEl = document.getElementById('editStatusBadgeDisplay');
+  if (badgeEl) {
+    badgeEl.className = `badge ${badgeInfo.class}`;
+    badgeEl.textContent = badgeInfo.label;
+  }
+
+  document.getElementById('editPkaRole').value = item.pkaRole || 'Kasi Pemerintahan';
+  document.getElementById('editPkaName').value = item.pkaName || '';
+  document.getElementById('editFundStage').value = item.fundStage || 'ADD (Alokasi Dana Desa) - Tahap 2';
+  document.getElementById('editSubDate').value = item.date || new Date().toISOString().split('T')[0];
+
+  const container = document.getElementById('editActivitiesContainer');
+  if (container) {
+    container.innerHTML = '';
+    const activities = (item.activities && item.activities.length > 0) ? item.activities : [{ name: '', amount: '' }];
+    activities.forEach(act => {
+      addEditActivityRow(act.name, act.amount);
+    });
+  }
+
+  calculateEditFormTotal();
+
+  const modal = document.getElementById('editSubmissionModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeEditSubmissionModal() {
+  const modal = document.getElementById('editSubmissionModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function handleEditPkaChange() {
+  const role = document.getElementById('editPkaRole').value;
+  const nameInput = document.getElementById('editPkaName');
+  if (!nameInput) return;
+  if (role === 'Kasi Pemerintahan' && activeSettings.pkaPemerintahan) {
+    nameInput.value = activeSettings.pkaPemerintahan;
+  } else if (role === 'Kasi Kesejahteraan' && activeSettings.pkaKesejahteraan) {
+    nameInput.value = activeSettings.pkaKesejahteraan;
+  } else if (role === 'Kasi Pelayanan' && activeSettings.pkaPelayanan) {
+    nameInput.value = activeSettings.pkaPelayanan;
+  } else if (role === 'Kaur Umum & Perencanaan' && activeSettings.pkaUmum) {
+    nameInput.value = activeSettings.pkaUmum;
+  }
+}
+
+function addEditActivityRow(name = '', amount = '') {
+  const container = document.getElementById('editActivitiesContainer');
+  if (!container) return;
+  const rowId = 'edit-act-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+  const div = document.createElement('div');
+  div.className = 'activity-input-card';
+  div.id = rowId;
+  const numVal = (amount !== '' && amount !== null && amount !== undefined) ? Number(amount) : '';
+  div.innerHTML = `
+    <div class="activity-card-body">
+      <div class="form-group" style="margin-bottom: 8px;">
+        <label><i class="fa-solid fa-file-lines"></i> Nama / Judul Kegiatan yang Akan Dilaksanakan:</label>
+        <input type="text" class="edit-act-name" placeholder="Contoh: Pembangunan Pos Kamling / Pembelanjaan ATK / Siltap Kades" value="${escapeHtml(name)}" required>
+      </div>
+      <div class="form-row" style="align-items: flex-end;">
+        <div class="form-group flex-1" style="margin-bottom: 0;">
+          <label><i class="fa-solid fa-money-bill-wave"></i> Jumlah Pagu Anggaran (Rp):</label>
+          <input type="number" class="edit-act-amount" min="0" step="any" placeholder="0" value="${numVal !== '' && numVal > 0 ? numVal : ''}" required oninput="calculateEditFormTotal()">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <button type="button" class="btn-remove-row" title="Hapus Kegiatan" onclick="removeEditActivityRow('${rowId}')">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+  calculateEditFormTotal();
+}
+
+function removeEditActivityRow(rowId) {
+  const container = document.getElementById('editActivitiesContainer');
+  const row = document.getElementById(rowId);
+  if (container && container.children.length <= 1) {
+    showToast('Minimal harus ada 1 kegiatan dalam daftar pengajuan!');
+    return;
+  }
+  if (row) {
+    row.remove();
+    calculateEditFormTotal();
+  }
+}
+
+function calculateEditFormTotal() {
+  const rows = document.querySelectorAll('#editActivitiesContainer .activity-input-card');
+  let grandTotal = 0;
+
+  rows.forEach(card => {
+    const amount = parseFloat(card.querySelector('.edit-act-amount')?.value) || 0;
+    grandTotal += amount;
+  });
+
+  const display = document.getElementById('editFormTotalDisplay');
+  const terbilangEl = document.getElementById('editFormTerbilangDisplay');
+
+  if (display) display.textContent = formatRupiah(grandTotal);
+  if (terbilangEl) terbilangEl.innerHTML = `<em>${terbilang(grandTotal)} Rupiah</em>`;
+
+  return grandTotal;
+}
+
+function saveEditedSubmission() {
+  const id = document.getElementById('editSubId').value;
+  const itemIndex = submissions.findIndex(s => s.id === id);
+  if (itemIndex === -1) {
+    showToast('Berkas pengajuan tidak ditemukan.');
+    return;
+  }
+
+  const pkaRole = document.getElementById('editPkaRole').value;
+  const pkaName = document.getElementById('editPkaName').value.trim();
+  const fundStage = document.getElementById('editFundStage').value;
+  const subDate = document.getElementById('editSubDate').value;
+
+  if (!pkaRole) {
+    showToast('Mohon pilih jabatan PKA!');
+    return;
+  }
+  if (!pkaName) {
+    showToast('Mohon isi nama pejabat PKA!');
+    return;
+  }
+
+  const rows = document.querySelectorAll('#editActivitiesContainer .activity-input-card');
+  const activities = [];
+  let totalAmount = 0;
+
+  rows.forEach(card => {
+    const name = card.querySelector('.edit-act-name')?.value.trim();
+    const amount = parseFloat(card.querySelector('.edit-act-amount')?.value) || 0;
+    if (name && amount > 0) {
+      activities.push({ name, amount });
+      totalAmount += amount;
+    }
+  });
+
+  if (activities.length === 0 || totalAmount <= 0) {
+    showToast('Mohon masukkan minimal 1 kegiatan beserta jumlah nominal pagunya!');
+    return;
+  }
+
+  const existing = submissions[itemIndex];
+
+  // Perbarui field dengan tetap mempertahankan id, regNo, disbursement, status, revision dsb
+  existing.pkaRole = pkaRole;
+  existing.pkaName = pkaName;
+  existing.fundStage = fundStage;
+  existing.date = subDate;
+  existing.activities = activities;
+  existing.total = totalAmount;
+
+  if (existing.revision) {
+    existing.revision.newTotal = totalAmount;
+  }
+
+  // Simpan secara aman ke lokal dan cloud tanpa merusak data lain
+  saveSubmissionsToLocalOnly();
+  syncToCloud(submissions);
+  renderAllViews();
+
+  closeEditSubmissionModal();
+  showToast('Perubahan berkas pengajuan berhasil disimpan!');
+
+  // Buka preview surat Pra-SPP yang sudah terupdate agar bisa langsung dicetak / dibagikan
+  openPrintModal(existing);
 }
